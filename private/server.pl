@@ -1,3 +1,5 @@
+%CATEGORIES
+
 % Fever- 21
 in_category(influenza, fever).
 in_category(measles, fever).
@@ -65,7 +67,10 @@ in_category(schizophrenia, body).
 in_category(alzheimers, body).
 
 
-% ===== Fever (21) =====
+
+
+% SYMPTOMS
+
 condition(influenza, [fever, cough, runny_nose]).
 condition(measles, [fever, cough, runny_nose, red_eyes, rash]).
 condition(covid_19, [fever, cough, sore_throat, loss_of_smell]).
@@ -88,7 +93,7 @@ condition(meningococcemia, [fever, rash, bruising, neck_stiffness]).
 condition(sepsis, [fever, fast_heartbeat, fast_breathing, confusion]).
 condition(rheumatic_fever, [fever, joint_pain, joint_swelling, chest_pain]).
 
-% ===== Stomach (22) =====
+
 condition(diarrhea, [diarrhea, vomiting, abdominal_cramps]).
 condition(cholera, [diarrhea, vomiting, sunken_eyes, dry_skin]).
 condition(dysentery, [diarrhea, abdominal_cramps, blood_in_stool, fever]).
@@ -112,7 +117,7 @@ condition(hand_foot_mouth_disease, [fever, rash, mouth_ulcer, hand_foot_blisters
 condition(leprosy, [pale_skin_patches, numbness, muscle_weakness]).
 condition(sore_eyes, [red_eyes, itchy_eyes, watery_eyes]).
 
-% ===== Body (17) =====
+
 condition(ischemic_heart_disease, [chest_pain, shortness_of_breath, sweating, nausea]).
 condition(stroke, [face_drooping, arm_weakness, speech_difficulty]).
 condition(hypertension, [headache, dizziness, blurred_vision]).
@@ -130,3 +135,41 @@ condition(arthritis, [joint_pain, joint_stiffness, joint_swelling, morning_stiff
 condition(depression, [low_mood, loss_of_interest, sleep_problems, hopelessness]).
 condition(schizophrenia, [hallucinations, delusions, disordered_thinking, social_withdrawal]).
 condition(alzheimers, [memory_loss, confusion, language_problems, mood_changes]).
+
+:- dynamic answer/2.
+
+start :-
+	write('Choose category'),
+	nl,
+	write('1. Fever'),
+	nl,
+	write('2. Stomach'),
+	nl,
+	write('3. Body'),
+	nl,
+	read(Choice),
+	choice(Choice, Category),
+	write('You picked: '),
+	write(Category),
+	nl.
+
+
+candidate(Condition, Category) :-
+	 in_category(Condition, Category),
+	(answer(Symptom, yes),
+		 \+ has_symptom(Condition, Symptom)),
+	 \+ (answer(Symptom, no),
+		has_symptom(Condition, Symptom)).
+	
+
+choice(1, fever).
+choice(2, stomach).
+choice(3, body).
+
+
+
+%RULES
+has_symptom(Condition, Symptom) :-
+	condition(Condition, Symptoms),
+	member(Symptom, Symptoms).
+
