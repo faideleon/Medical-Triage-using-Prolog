@@ -148,10 +148,20 @@ start :-
 	write('3. Body'),
 	nl,
 	read(Choice),
-	choice(Choice, Category),
-	write('You picked: '),
-	write(Category),
-	nl.
+	pick_category(Choice).
+
+% If the number is valid, ask questions and show results.
+% Otherwise (the part after ';'), show an error message.
+pick_category(Choice) :-
+    (   choice(Choice, Category)
+    ->  write('You picked: '), write(Category), 
+		nl, 
+		nl,
+        category_symptoms(Category, Symptoms),
+        ask_all(Symptoms),
+        show_results(Category)
+    ;   write('Invalid choice. Please type start. and try again.'), nl
+    ).
 
 
 candidate(Condition, Category) :-
@@ -178,14 +188,19 @@ category_symptoms(Category, Symptoms) :-
 	findall(S, (in_category(D, Category), has_symptom(D, S)), AllSymptoms). 
 	sort(AllSymptoms, Symptoms). 
 
+%true if Symptom is in the diseases list.
+has_symptom(Disease, Symptom) :-
+    condition(Disease, SymptomList),
+    member(Symptom, SymptomList).
+
 %ask about each symptom, one by one
 ask_symptoms([]).
 ask_symptoms([First | Rest]) :-
 	ask(First), 
 	ask_symptoms(Rest). 
 
-ask(S) :- 
-	format('Do you have ~w (yes. / no.): ', [Symptom]),
+ask(Symptom) :- 
+	format('Do you have '), write(Symptom), write('? (yes. or no.): '),
 	read(Reply),
 	( member(Reply, [yes, no])
 	-> 	assert(answer (Symptom, Reply))
@@ -197,8 +212,8 @@ ask(S) :-
 %Count how many symptoms of a disease the user said "yes" to.
 count_matches(Disease, Count) :-
 		condition(Disease, DiseaseSymptoms), 
-		findall(S, (member(S, DiseaseSymptoms), answer(S, yes)), MatchedList),
-		length(MatchedList, Count).
+		findall(S, (member(S, DiseaseSymptoms), answer(S, yes)), Matched),
+		length(Matched, Count).
 
 %user said yes to a symptom, but a disease does not have it
 missing_symptom(Disease) :-
@@ -209,4 +224,23 @@ missing_symptom(Disease) :-
 denied_symptom(Disease) :-
 	answer(Symptom, no),
 	has_symptom(Disease, Symptom). 
+
+show_results(Category) :-
+    nl,
+    write('Possible conditions:'), nl,
+    forall(in_category(Disease, Category), show_one(Disease)),
+    nl,
+    write('Note: this is NOT a medical diagnosis. Please see a doctor.'), 
+	nl.
+
+show_one(Disease) :-
+    count_matches(Disease, Count),
+    condition(Disease, SymptomList),
+    length(SymptomList, Total),
+    (   Count > 0
+    ->  write('  - '), write(Disease),
+        write(': '), write(Count), write(' of '), write(Total),
+        write(' symptoms matched'), nl
+    ;   true                         % no match: print nothing
+    ).
 
