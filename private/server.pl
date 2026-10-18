@@ -139,7 +139,8 @@ condition(alzheimers, [memory_loss, confusion, language_problems, mood_changes])
 :- dynamic answer/2.
 
 start :-
-	write('Choose category'),
+	retractall(answer(_, _)),
+	write('Choose category, type the number only'),
 	nl,
 	write('1. Fever'),
 	nl,
@@ -147,16 +148,42 @@ start :-
 	nl,
 	write('3. Body'),
 	nl,
-	read(Choice),
-	choice(Choice, Category),
+	read_line_to_string(user_input, Raw),
+	(catch(number_string(Choice, Raw),
+			_,
+			fail),
+		choice(Choice, Category) ->
 	write('You picked: '),
-	write(Category),
-	nl.
+		write(Category),
+		nl,
+		ask_all(Category),
+		nl;
+	write('Invalid input. Try again.'),
+		nl,
+		start).
+
+ask(Symptom, Category) :-
+	has_symptom(Condition, Symptom),
+	candidate(Condition, Category),
+	 \+ answer(Symptom, _),
+	format("Do you have ~w? (yes/no): ", [Symptom]),
+	read_line_to_string(user_input, Raw),
+	string_lower(Raw, Lower),
+	atom_string(Answer, Lower),
+	assertz(answer(Symptom, Answer)).
+
+ask_all(Category) :-
+	(ask(Symptom, Category) ->
+	ask_all(Category);
+	(candidate(Condition, Category)) ->
+	format("Most likely condition is: ~w", [Condition]),
+		nl;
+	write("Condition is unknown. Please visit a doctor immediately!")).
 
 
 candidate(Condition, Category) :-
 	 in_category(Condition, Category),
-	(answer(Symptom, yes),
+	 \+ (answer(Symptom, yes),
 		 \+ has_symptom(Condition, Symptom)),
 	 \+ (answer(Symptom, no),
 		has_symptom(Condition, Symptom)).
