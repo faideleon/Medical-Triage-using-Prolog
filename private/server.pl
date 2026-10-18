@@ -173,3 +173,40 @@ has_symptom(Condition, Symptom) :-
 	condition(Condition, Symptoms),
 	member(Symptom, Symptoms).
 
+%all symptoms that appear in a category (no duplicates)
+category_symptoms(Category, Symptoms) :-
+	findall(S, (in_category(D, Category), has_symptom(D, S)), AllSymptoms). 
+	sort(AllSymptoms, Symptoms). 
+
+%ask about each symptom, one by one
+ask_symptoms([]).
+ask_symptoms([First | Rest]) :-
+	ask(First), 
+	ask_symptoms(Rest). 
+
+ask(S) :- 
+	format('Do you have ~w (yes. / no.): ', [Symptom]),
+	read(Reply),
+	( member(Reply, [yes, no])
+	-> 	assert(answer (Symptom, Reply))
+	; 	write('Please type yes. or no. '),
+		nl,
+		ask(Symptom)
+	). 
+
+%Count how many symptoms of a disease the user said "yes" to.
+count_matches(Disease, Count) :-
+		condition(Disease, DiseaseSymptoms), 
+		findall(S, (member(S, DiseaseSymptoms), answer(S, yes)), MatchedList),
+		length(MatchedList, Count).
+
+%user said yes to a symptom, but a disease does not have it
+missing_symptom(Disease) :-
+	answer(Symptom, yes), 
+	\+ has_symptom(Disease, Symptom).
+
+%user said not to a symptom, but the disease has it
+denied_symptom(Disease) :-
+	answer(Symptom, no),
+	has_symptom(Disease, Symptom). 
+
