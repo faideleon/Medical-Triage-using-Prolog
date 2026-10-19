@@ -1,75 +1,74 @@
 /**
  * ============================================================================
- * 1. EDITABLE DISEASE DESCRIPTIONS DICTIONARY
- * Modify any text string below to customize the output on the results page.
+ * 1. EASY-TO-EDIT DISEASE DESCRIPTIONS
  * ============================================================================
  */
 const DISEASE_DESCRIPTIONS = {
-  influenza: "An acute viral respiratory infection characterized by sudden onset of fever, cough, and nasal congestion. Rest and hydration are primary supportive measures.",
-  measles: "A highly contagious viral illness presenting with fever, cough, conjunctivitis (red eyes), and a characteristic maculopapular rash.",
-  covid_19: "A respiratory disease caused by SARS-CoV-2, commonly presenting with fever, dry cough, sore throat, and anosmia (loss of smell).",
-  acute_respiratory_infection: "An upper or lower respiratory tract infection causing fever, cough, and tachypnea (fast breathing) requiring airway monitoring.",
-  pneumonia: "Inflammation of the pulmonary alveoli resulting in productive cough with phlegm, fever, dyspnea, and pleuritic chest pain.",
-  acute_bronchitis: "Inflammation of the bronchial tubes causing persistent cough, sputum production, wheezing, and throat irritation.",
-  chronic_lower_respiratory_disease: "Long-term airway obstruction (including COPD and chronic asthma) marked by dyspnea, wheezing, and chest tightness.",
-  tuberculosis: "A chronic bacterial infection by Mycobacterium tuberculosis affecting the lungs, causing prolonged cough, fever, and unexplained weight loss.",
-  pertussis: "Whooping cough; a bacterial respiratory infection causing severe paroxysmal coughing fits often followed by post-tussive vomiting.",
-  extrapulmonary_tuberculosis: "Tuberculosis infection occurring outside the lungs, frequently affecting lymph nodes with fever, night sweats, and weight loss.",
-  hiv: "Human Immunodeficiency Virus infection; acute or chronic presentation includes persistent fever, generalized lymphadenopathy, weight loss, and rash.",
-  diphtheria: "A serious bacterial infection by Corynebacterium diphtheriae producing a characteristic grey pseudomembrane in the pharynx alongside fever and swollen glands.",
-  dengue: "A mosquito-borne flavivirus infection presenting with high fever, severe retro-orbital pain (behind the eyes), headache, and myalgia.",
-  chikungunya: "An alphavirus transmitted by Aedes mosquitoes causing acute fever, debilitating polyarthralgia (joint pain), and skin rash.",
-  leptospirosis: "A zoonotic spirochetal infection acquired from contaminated water, marked by fever, headache, myalgia, and prominent calf tenderness.",
-  malaria: "A protozoan parasitic infection transmitted by Anopheles mosquitoes presenting with cyclical paroxysms of fever, rigors (chills), and headache.",
-  typhoid_fever: "Enteric fever caused by Salmonella Typhi, characterized by stepwise fever, headache, abdominal pain, and anorexia.",
-  meningitis: "Acute inflammation of the protective meningeal membranes covering the brain and spinal cord; classic triad includes fever, headache, and nuchal rigidity.",
-  meningococcemia: "Life-threatening bloodstream infection by Neisseria meningitidis causing rapid onset fever, petechial/purpuric rash, bruising, and neck stiffness.",
-  sepsis: "Systemic dysregulated host response to infection causing organ dysfunction, tachycardia, tachypnea, fever, and altered mental status (confusion).",
-  rheumatic_fever: "An inflammatory autoimmune complication following streptococcal pharyngitis, affecting the heart, joints, and central nervous system.",
-  diarrhea: "Acute gastroenteritis characterized by loose watery stools, emesis, and abdominal cramping; primary risk is fluid and electrolyte depletion.",
-  cholera: "Severe secretory diarrhea caused by Vibrio cholerae leading to rapid dehydration, sunken eyes, loss of skin turgor, and vomiting.",
-  dysentery: "Invasive infectious gastroenteritis causing bloody, mucoid diarrhea, severe abdominal cramps, and systemic fever.",
-  schistosomiasis: "A parasitic trematode infection acquired through freshwater contact, causing abdominal pain, bloody diarrhea, and cercarial dermatitis (itching).",
-  appendicitis: "Acute inflammation of the vermiform appendix presenting with periumbilical pain migrating to the right lower quadrant, nausea, fever, and anorexia.",
-  acute_pancreatitis: "Sudden inflammation of the pancreas presenting with severe epigastric pain radiating to the back, accompanied by nausea and vomiting.",
-  gastric_ulcer: "A mucosal defect in the stomach lining causing burning epigastric pain, dyspepsia (heartburn), bloating, and nausea.",
-  cirrhosis: "Late-stage hepatic fibrosis resulting in portal hypertension, jaundice, ascites (swollen abdomen), coagulopathy (bruising), and pruritus.",
-  hepatitis_a: "An acute, self-limiting viral liver infection transmitted via the fecal-oral route, presenting with fever, anorexia, dark urine, and jaundice.",
-  hepatitis_b: "A viral liver infection transmitted via bodily fluids causing nausea, choluria (dark urine), acholic (pale) stools, and icterus.",
-  hepatitis_c: "A blood-borne viral hepatitis that frequently progresses to chronic liver disease, presenting with right upper quadrant pain, dark urine, and jaundice.",
-  urinary_tract_infection: "Bacterial colonization of the urinary tract causing dysuria (painful urination), frequency, suprapubic tenderness, and turbid urine.",
-  kidney_infection: "Pyelonephritis; an upper urinary tract infection presenting with high fever, costovertebral angle (back/flank) pain, dysuria, and nausea.",
-  chronic_kidney_disease: "Progressive loss of renal function resulting in fluid retention (pedal/ankle edema), uremic nausea, and hematuria.",
-  glomerulonephritis: "Immune-mediated inflammation of the renal glomeruli presenting with hematuria, periorbital (facial) edema, and peripheral swelling.",
-  cellulitis: "An acute bacterial skin and subcutaneous tissue infection characterized by localized erythema, edema, warmth, tenderness, and fever.",
-  dermatitis: "Inflammatory skin condition marked by pruritus (itching), xerosis (dry skin), erythema, and epidermal fissuring.",
-  chickenpox: "Primary varicella-zoster virus infection causing fever and a generalized pruritic vesicular (blistering) rash in successive crops.",
-  mpox: "A viral zoonosis presenting with prodromal fever, prominent lymphadenopathy (swollen glands), and a centrifugal vesiculopustular rash.",
-  hand_foot_mouth_disease: "An enteroviral syndrome characterized by low-grade fever, painful oral enanthems (mouth ulcers), and maculopapular/vesicular lesions on hands and feet.",
-  leprosy: "Hansen's disease; a chronic mycobacterial infection targeting peripheral nerves and skin, causing hypopigmented anesthetic patches and motor weakness.",
-  sore_eyes: "Acute conjunctivitis presenting with conjunctival injection (red eyes), ocular pruritus, and epiphora (watery discharge).",
-  ischemic_heart_disease: "Myocardial oxygen supply-demand mismatch due to coronary artery narrowing, causing angina (chest pain), dyspnea, diaphoresis, and nausea.",
-  stroke: "Acute focal neurological deficit from cerebral ischemia or hemorrhage; recognized by facial droop, unilateral arm weakness, and dysarthria/aphasia.",
-  hypertension: "Sustained elevation of systemic arterial blood pressure; severe elevations may cause occipital headache, vertigo/dizziness, and visual disturbances.",
-  diabetes: "Chronic metabolic disorder of impaired insulin secretion or action presenting with polydipsia (excessive thirst), polyuria, and blurred vision.",
-  heart_failure: "Inability of the ventricles to pump sufficient blood to meet metabolic demands, resulting in dyspnea, orthopnea, ankle edema, and palpitations.",
-  atherosclerosis: "Systemic arterial plaque deposition causing myocardial ischemia (chest pain), peripheral claudication (leg pain), and paresthesia.",
-  deep_vein_thrombosis: "Formation of a blood clot within a deep vein (typically the lower extremity), presenting with unilateral calf pain, swelling, warmth, and erythema.",
-  anemia: "Decreased red blood cell mass or hemoglobin concentration leading to reduced tissue oxygenation, pallor, dizziness, and compensatory palpitations.",
-  cancer: "Malignant neoplastic proliferation often presenting systemically with unintentional weight loss (cachexia), anorexia, and a persistent painless mass.",
-  malnutrition: "Deficiency of caloric or protein intake resulting in marked weight loss, low body mass index, and skeletal muscle wasting.",
-  epilepsy: "A chronic neurological disorder predisposing the brain to recurrent unprovoked seizures, myoclonic jerking, and transient loss of consciousness.",
-  tetanus: "Clostridium tetani neurotoxin-mediated condition causing generalized hypertonia, painful muscle spasms, trismus (lockjaw), and dysphagia.",
-  rabies: "An acute, fatal viral encephalomyelitis transmitted via mammalian bites, presenting with fever, paresthesia at the bite site, spasms, and hydrophobia.",
-  arthritis: "Intra-articular joint inflammation causing arthralgia, joint effusion (swelling), reduced range of motion, and prominent morning stiffness.",
-  depression: "Major depressive disorder characterized by persistent dysphoria (low mood), anhedonia (loss of interest), sleep dysregulation, and feelings of hopelessness.",
-  schizophrenia: "A chronic psychotic disorder involving auditory/visual hallucinations, fixed delusions, disorganized thought processes, and social withdrawal.",
-  alzheimers: "Progressive neurodegenerative dementia marked by anterograde memory impairment, disorientation, aphasia, and behavioral changes."
+  influenza: "Commonly known as the flu. It is a viral illness that causes fever, cough, and a runny nose. Resting at home and drinking plenty of water or warm fluids helps recovery.",
+  measles: "A contagious viral illness that causes fever, cough, red watery eyes, and a widespread skin rash. Please consult a doctor and avoid close contact with others.",
+  covid_19: "A contagious respiratory virus that commonly causes fever, cough, sore throat, and a reduced sense of smell. Rest, hydrate, and get tested if possible.",
+  acute_respiratory_infection: "An infection in the airways or lungs causing fever, cough, and fast breathing. Because fast breathing can be serious, please have a doctor check your breathing.",
+  pneumonia: "A serious lung infection where the air sacs fill with fluid, causing fever, cough with phlegm, chest pain, and trouble breathing. Prompt medical care is needed.",
+  acute_bronchitis: "Swelling and mucus buildup in the main breathing tubes of the lungs, causing a cough with phlegm, wheezing, and a sore throat.",
+  chronic_lower_respiratory_disease: "Long-term irritation of the airways (such as chronic bronchitis or asthma) causing shortness of breath, wheezing, and tightness in the chest.",
+  tuberculosis: "A serious bacterial lung infection that causes a long-lasting cough, fever, and unexplained weight loss. A doctor can provide specific antibiotic treatment.",
+  pertussis: "Also called whooping cough. It causes severe, repeated coughing spells that can make it hard to catch your breath or cause vomiting after coughing.",
+  extrapulmonary_tuberculosis: "A tuberculosis infection located outside the lungs, often causing swollen lymph glands, fever, night sweats, and weight loss.",
+  hiv: "A virus that weakens the body's immune system, which can cause ongoing fever, swollen glands, weight loss, and a skin rash. Please visit a clinic for blood testing.",
+  diphtheria: "A serious bacterial throat infection that causes fever, sore throat, swollen neck glands, and a thick grey coating in the throat. Seek immediate medical care.",
+  dengue: "A mosquito-borne viral illness that causes high fever, severe headache, pain behind the eyes, and body aches. Drink plenty of fluids and see a doctor promptly.",
+  chikungunya: "A viral illness spread by mosquitoes that causes sudden fever, strong joint pain, and a skin rash.",
+  leptospirosis: "A bacterial infection often caught from floodwater or wet soil, causing fever, headache, body aches, and pain in the calves. Antibiotic treatment from a doctor is important.",
+  malaria: "A serious illness spread by mosquitoes in tropical areas, causing repeated waves of high fever, shaking chills, and headache.",
+  typhoid_fever: "A bacterial infection from contaminated food or water that causes a lasting fever, headache, stomach pain, and loss of appetite.",
+  meningitis: "A medical emergency involving swelling around the brain and spinal cord, causing fever, severe headache, vomiting, and a stiff neck. Go to a hospital immediately.",
+  meningococcemia: "A life-threatening bloodstream infection causing fever, a stiff neck, skin rash, and dark bruising. Seek emergency hospital care right away.",
+  sepsis: "A life-threatening medical emergency where the body reacts severely to an infection, causing fever, fast heartbeat, fast breathing, and confusion. Go to an emergency room immediately.",
+  rheumatic_fever: "An inflammatory condition that can develop after an untreated throat infection, causing fever, painful swollen joints, and chest pain.",
+  diarrhea: "Frequent loose or watery bowel movements with stomach cramps and vomiting. Sip clean water or oral rehydration salts frequently to prevent dehydration.",
+  cholera: "A severe watery diarrhea illness that quickly drains the body of fluids, causing vomiting, dry skin, and sunken eyes. Immediate rehydration at a clinic is critical.",
+  dysentery: "An intestinal infection that causes diarrhea with visible blood, stomach cramps, and fever. Please see a doctor for proper medication and hydration.",
+  schistosomiasis: "A parasitic infection caught from freshwater exposure, causing stomach pain, diarrhea with blood, and itchy skin.",
+  appendicitis: "Sudden inflammation of the appendix causing stomach pain, nausea, loss of appetite, and fever. Please visit a hospital promptly to check if surgery is needed.",
+  acute_pancreatitis: "Sudden swelling of the pancreas causing strong stomach pain that spreads to the back, along with nausea and vomiting. Hospital care is recommended.",
+  gastric_ulcer: "An open sore in the lining of the stomach that causes burning stomach pain, heartburn, bloating, and nausea.",
+  cirrhosis: "Long-term scarring of the liver that can cause yellowing of the skin and eyes (jaundice), a swollen belly, easy bruising, and itchy skin.",
+  hepatitis_a: "A liver infection spread through contaminated food or water, causing fever, loss of appetite, dark-colored urine, and yellow skin or eyes.",
+  hepatitis_b: "A viral liver infection that causes nausea, dark urine, pale-colored stools, and yellowing of the skin or eyes.",
+  hepatitis_c: "A viral infection of the liver causing stomach pain, nausea, dark urine, pale stools, and yellowing of the skin or eyes.",
+  urinary_tract_infection: "An infection in the bladder or urinary tract causing burning or pain when urinating, frequent urination, cloudy urine, and lower belly discomfort.",
+  kidney_infection: "A serious urinary infection that has reached the kidneys, causing fever, back or side pain, nausea, and painful urination. Please see a doctor for antibiotics.",
+  chronic_kidney_disease: "Gradual loss of kidney function over time, which can cause swelling in the ankles, nausea, and blood in the urine.",
+  glomerulonephritis: "Inflammation of the tiny filters inside the kidneys, causing puffiness in the face, swollen ankles, and blood in the urine.",
+  cellulitis: "A bacterial skin infection that causes an area of red, swollen, painful skin along with a fever. A doctor can prescribe antibiotics to clear it.",
+  dermatitis: "Skin irritation or eczema that causes red, dry, cracked, and itchy skin.",
+  chickenpox: "A contagious viral illness that causes fever and an itchy rash of small fluid-filled blisters across the body.",
+  mpox: "A viral illness that causes fever, swollen glands, and a rash with blisters.",
+  hand_foot_mouth_disease: "A viral infection that causes fever, painful sores inside the mouth, and a rash or blisters on the hands and feet.",
+  leprosy: "A slow-growing bacterial infection affecting the skin and nerves, causing pale skin patches, numbness, and muscle weakness. It is curable with medical treatment.",
+  sore_eyes: "Also known as pink eye or conjunctivitis. It causes red, itchy, and watery eyes. Avoid rubbing your eyes and wash your hands frequently.",
+  ischemic_heart_disease: "Reduced blood flow to the heart muscle causing chest pain or pressure, shortness of breath, sweating, and nausea. Seek emergency medical attention immediately.",
+  stroke: "A medical emergency where blood flow to part of the brain stops, causing facial drooping, arm weakness, and trouble speaking. Call emergency services immediately.",
+  hypertension: "High blood pressure. When very high, it can cause headache, dizziness, and blurry vision. Have your blood pressure checked with a cuff.",
+  diabetes: "A condition where blood sugar levels are too high, often causing constant thirst, frequent urination, and blurry vision.",
+  heart_failure: "A condition where the heart pumps less effectively, leading to shortness of breath, swollen ankles, and a fluttering or racing heartbeat.",
+  atherosclerosis: "Narrowing of the arteries from plaque buildup, which can cause chest pain, leg pain when walking, and numbness.",
+  deep_vein_thrombosis: "A blood clot in a deep vein, usually in the leg, causing leg pain, swelling, redness, and warm skin in that area. See a doctor promptly.",
+  anemia: "A low level of healthy red blood cells to carry oxygen, causing pale skin, dizziness, and a fast or noticeable heartbeat.",
+  cancer: "Abnormal cell growth in the body that can cause unexplained weight loss, loss of appetite, and a painless lump. Please see a doctor for an evaluation.",
+  malnutrition: "A lack of enough nutrients or calories in the diet, leading to weight loss, low body weight, and weak muscles.",
+  epilepsy: "A brain condition that causes repeated seizures, sudden muscle jerking, and brief loss of awareness.",
+  tetanus: "A serious bacterial nerve condition from a wound, causing stiff muscles, painful spasms, stiffness in the jaw (lockjaw), and trouble swallowing. Seek emergency care.",
+  rabies: "A life-threatening viral infection from an animal bite or scratch, causing fever, numbness, muscle spasms, and difficulty swallowing water. Seek emergency care immediately.",
+  arthritis: "Swelling and tenderness in one or more joints, causing joint pain, swelling, and stiffness—especially first thing in the morning.",
+  depression: "A mood condition that causes a persistent feeling of sadness, loss of interest in daily activities, trouble sleeping, and feelings of hopelessness.",
+  schizophrenia: "A serious mental health condition that affects how a person thinks and perceives reality, causing hallucinations, strong false beliefs, and withdrawal from others.",
+  alzheimers: "A brain condition that slowly affects memory, causing forgetfulness, confusion about time or place, trouble finding words, and mood changes."
 };
 
 /**
  * ============================================================================
- * 2. PROLOG KNOWLEDGE BASE DATASET (60 Conditions across 3 Categories)
+ * 2. PROLOG KNOWLEDGE BASE
  * ============================================================================
  */
 const KNOWLEDGE_BASE = [
@@ -140,494 +139,365 @@ const KNOWLEDGE_BASE = [
   { id: "alzheimers", category: "body", symptoms: ["memory_loss", "confusion", "language_problems", "mood_changes"] }
 ];
 
-// Utility: format snake_case identifiers into readable labels
-function formatLabel(str) {
+function formatName(str) {
+  if (str === "covid_19") return "COVID-19";
+  if (str === "hiv") return "HIV";
+  if (str === "alzheimers") return "Alzheimer's Disease";
   return str.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
-// Build symptom index mapped to categories
-const SYMPTOM_MAP = new Map();
-KNOWLEDGE_BASE.forEach(cond => {
-  cond.symptoms.forEach(sym => {
-    if (!SYMPTOM_MAP.has(sym)) {
-      SYMPTOM_MAP.set(sym, new Set());
-    }
-    SYMPTOM_MAP.get(sym).add(cond.category);
-  });
-});
-const ALL_SYMPTOMS = Array.from(SYMPTOM_MAP.keys()).sort();
-
-// Application State
-const state = {
-  selectedSymptoms: new Set(),
-  activeCategory: "all",
-  searchQuery: "",
-  subgraphOnly: false,
-  rankedDiseases: []
-};
-
 /**
  * ============================================================================
- * 3. SCORING & DIAGNOSTIC ENGINE
+ * 3. ENGINE STATE & PREFERENCE HANDLING
+ * - Sorts initial pool by descending symptom count so supersets (e.g. measles)
+ *   are prioritized over subsets (e.g. influenza)[cite: 1, 2].
+ * - Extended Questioning keeps asking until all candidates are fully tested or eliminated.
  * ============================================================================
  */
-function evaluateCandidates() {
-  const selected = state.selectedSymptoms;
-  if (selected.size === 0) {
-    state.rankedDiseases = [];
+const state = {
+  category: null,
+  initialPool: [],
+  candidates: [],
+  answers: [],
+  currentSymptom: null,
+  matchedDisease: null,
+  isFinished: false
+};
+
+function startCategorySession(category) {
+  state.category = category;
+  state.answers = [];
+  state.matchedDisease = null;
+  state.isFinished = false;
+
+  let pool = category === "extended"
+    ? [...KNOWLEDGE_BASE]
+    : KNOWLEDGE_BASE.filter(d => d.category === category);
+
+  // Preference (1): Sort by symptom length descending so superset conditions
+  // (like measles) are tested before strict subsets (like influenza)[cite: 1, 2].
+  pool.sort((a, b) => b.symptoms.length - a.symptoms.length);
+  state.initialPool = pool;
+
+  recomputeEngineState();
+
+  document.getElementById("category-step-view").style.display = "none";
+  document.getElementById("question-step-view").style.display = "block";
+
+  const badgeLabel = category === "extended"
+    ? "Mode: Extended Questioning (All 60 Conditions)"
+    : `You picked: ${formatName(category)} Category`;
+  document.getElementById("active-category-badge").textContent = badgeLabel;
+
+  renderWorkspace();
+}
+
+function recomputeEngineState() {
+  const yesSet = new Set(state.answers.filter(a => a.answer === "yes").map(a => a.symptom));
+  const noSet = new Set(state.answers.filter(a => a.answer === "no").map(a => a.symptom));
+
+  state.candidates = state.initialPool.filter(disease => {
+    for (const y of yesSet) {
+      if (!disease.symptoms.includes(y)) return false;
+    }
+    for (const n of noSet) {
+      if (disease.symptoms.includes(n)) return false;
+    }
+    return true;
+  });
+
+  // Check for exact match where all symptoms of a candidate are answered "yes"
+  const exactMatch = state.candidates.find(disease =>
+    disease.symptoms.every(sym => yesSet.has(sym))
+  );
+
+  if (exactMatch) {
+    state.matchedDisease = exactMatch;
+    state.currentSymptom = null;
+    state.isFinished = true;
     return;
   }
 
-  const results = [];
-  KNOWLEDGE_BASE.forEach(disease => {
-    const matched = disease.symptoms.filter(s => selected.has(s));
-    if (matched.length > 0) {
-      const missing = disease.symptoms.filter(s => !selected.has(s));
-      const unionSize = new Set([...selected, ...disease.symptoms]).size;
-      const coverage = matched.length / disease.symptoms.length; // Sensitivity
-      const jaccard = matched.length / unionSize;                // Specificity
-      const compositeScore = (coverage * 0.7 + jaccard * 0.3) * 100;
+  if (state.candidates.length === 0) {
+    state.matchedDisease = null;
+    state.currentSymptom = null;
+    state.isFinished = true;
+    return;
+  }
 
-      results.push({
-        ...disease,
-        matched,
-        missing,
-        coverage,
-        score: Math.round(compositeScore)
-      });
+  // Preference (2): Extended Questioning continues asking until all valid candidates are fully resolved
+  state.matchedDisease = null;
+  state.isFinished = false;
+
+  let nextSym = null;
+  for (const candidate of state.candidates) {
+    const unasked = candidate.symptoms.find(sym => !yesSet.has(sym) && !noSet.has(sym));
+    if (unasked) {
+      nextSym = unasked;
+      break;
     }
+  }
+
+  state.currentSymptom = nextSym || null;
+  if (!state.currentSymptom) {
+    state.isFinished = true;
+  }
+}
+
+function recordAnswer(answerValue) {
+  if (!state.currentSymptom || state.isFinished) return;
+
+  state.answers.push({
+    symptom: state.currentSymptom,
+    answer: answerValue
   });
 
-  results.sort((a, b) => b.score - a.score || b.matched.length - a.matched.length);
-  state.rankedDiseases = results;
+  recomputeEngineState();
+  renderWorkspace();
+
+  if (state.isFinished) {
+    openConfirmationModal();
+  }
+}
+
+function undoLastAnswer() {
+  if (state.answers.length === 0) return;
+  state.answers.pop();
+  recomputeEngineState();
+  renderWorkspace();
 }
 
 /**
  * ============================================================================
- * 4. OBSIDIAN FORCE-DIRECTED GRAPH VIEW (HTML5 CANVAS)
+ * 4. UI RENDERING
  * ============================================================================
  */
-const canvas = document.getElementById("graph-canvas");
-const ctx = canvas.getContext("2d");
+function renderWorkspace() {
+  const yesSet = new Set(state.answers.filter(a => a.answer === "yes").map(a => a.symptom));
 
-const nodes = [];
-const edges = [];
-const nodeById = new Map();
+  const questionText = document.getElementById("question-text");
+  const yesNoControls = document.getElementById("yes-no-controls");
+  const completeBanner = document.getElementById("question-complete-banner");
 
-// Initialize Graph Nodes & Edges
-function initGraphData() {
-  const width = canvas.clientWidth || 800;
-  const height = canvas.clientHeight || 500;
-
-  KNOWLEDGE_BASE.forEach((d, idx) => {
-    const angle = (idx / KNOWLEDGE_BASE.length) * Math.PI * 2;
-    const node = {
-      id: `d:${d.id}`,
-      rawId: d.id,
-      label: formatLabel(d.id),
-      type: "disease",
-      category: d.category,
-      x: width / 2 + Math.cos(angle) * 220 + (Math.random() - 0.5) * 40,
-      y: height / 2 + Math.sin(angle) * 220 + (Math.random() - 0.5) * 40,
-      vx: 0,
-      vy: 0,
-      radius: 7
-    };
-    nodes.push(node);
-    nodeById.set(node.id, node);
-  });
-
-  ALL_SYMPTOMS.forEach((s, idx) => {
-    const angle = (idx / ALL_SYMPTOMS.length) * Math.PI * 2;
-    const node = {
-      id: `s:${s}`,
-      rawId: s,
-      label: formatLabel(s),
-      type: "symptom",
-      x: width / 2 + Math.cos(angle) * 110 + (Math.random() - 0.5) * 30,
-      y: height / 2 + Math.sin(angle) * 110 + (Math.random() - 0.5) * 30,
-      vx: 0,
-      vy: 0,
-      radius: 5
-    };
-    nodes.push(node);
-    nodeById.set(node.id, node);
-  });
-
-  KNOWLEDGE_BASE.forEach(d => {
-    d.symptoms.forEach(s => {
-      edges.push({
-        source: nodeById.get(`d:${d.id}`),
-        target: nodeById.get(`s:${s}`)
-      });
-    });
-  });
-}
-
-// Camera & Interaction State
-const camera = { x: 0, y: 0, zoom: 0.95 };
-let isDraggingCanvas = false;
-let draggedNode = null;
-let hoveredNode = null;
-let dragStart = { x: 0, y: 0 };
-
-function resizeCanvas() {
-  const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width * window.devicePixelRatio;
-  canvas.height = rect.height * window.devicePixelRatio;
-  ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
-}
-window.addEventListener("resize", resizeCanvas);
-
-function screenToWorld(sx, sy) {
-  const rect = canvas.getBoundingClientRect();
-  return {
-    x: (sx - rect.left - rect.width / 2 - camera.x) / camera.zoom + rect.width / 2,
-    y: (sy - rect.top - rect.height / 2 - camera.y) / camera.zoom + rect.height / 2
-  };
-}
-
-canvas.addEventListener("mousedown", e => {
-  const pos = screenToWorld(e.clientX, e.clientY);
-  draggedNode = nodes.find(n => !n.hidden && Math.hypot(n.x - pos.x, n.y - pos.y) < n.radius + 6);
-  if (!draggedNode) {
-    isDraggingCanvas = true;
-    dragStart = { x: e.clientX - camera.x, y: e.clientY - camera.y };
-  }
-});
-
-window.addEventListener("mousemove", e => {
-  const pos = screenToWorld(e.clientX, e.clientY);
-  if (draggedNode) {
-    draggedNode.x = pos.x;
-    draggedNode.y = pos.y;
-    draggedNode.vx = 0;
-    draggedNode.vy = 0;
-  } else if (isDraggingCanvas) {
-    camera.x = e.clientX - dragStart.x;
-    camera.y = e.clientY - dragStart.y;
+  if (!state.isFinished && state.currentSymptom) {
+    const readableSymptom = formatName(state.currentSymptom).toLowerCase();
+    questionText.textContent = `Do you have ${readableSymptom}?`;
+    yesNoControls.style.display = "grid";
+    completeBanner.style.display = "none";
   } else {
-    hoveredNode = nodes.find(n => !n.hidden && Math.hypot(n.x - pos.x, n.y - pos.y) < n.radius + 5) || null;
-  }
-});
-
-window.addEventListener("mouseup", () => {
-  if (draggedNode && draggedNode.type === "symptom") {
-    // Allow clicking symptom nodes directly in the graph to toggle them
-  }
-  draggedNode = null;
-  isDraggingCanvas = false;
-});
-
-canvas.addEventListener("dblclick", e => {
-  const pos = screenToWorld(e.clientX, e.clientY);
-  const clicked = nodes.find(n => !n.hidden && Math.hypot(n.x - pos.x, n.y - pos.y) < n.radius + 6);
-  if (clicked && clicked.type === "symptom") {
-    toggleSymptom(clicked.rawId);
-  }
-});
-
-canvas.addEventListener("wheel", e => {
-  e.preventDefault();
-  const factor = e.deltaY < 0 ? 1.1 : 0.9;
-  camera.zoom = Math.min(2.5, Math.max(0.35, camera.zoom * factor));
-}, { passive: false });
-
-// Physics & Render Loop
-function tickGraph() {
-  const rect = canvas.getBoundingClientRect();
-  const cx = rect.width / 2;
-  const cy = rect.height / 2;
-
-  const scoreMap = new Map(state.rankedDiseases.map(d => [d.id, d.score]));
-
-  // Determine visibility
-  nodes.forEach(n => {
-    if (!state.subgraphOnly || state.selectedSymptoms.size === 0) {
-      n.hidden = false;
-    } else if (n.type === "symptom") {
-      n.hidden = !state.selectedSymptoms.has(n.rawId);
+    yesNoControls.style.display = "none";
+    completeBanner.style.display = "block";
+    if (state.matchedDisease) {
+      questionText.textContent = `Match Found: ${formatName(state.matchedDisease.id)}`;
     } else {
-      n.hidden = !scoreMap.has(n.rawId);
+      questionText.textContent = `No exact match found.`;
     }
-  });
+  }
 
-  const visibleNodes = nodes.filter(n => !n.hidden);
+  document.getElementById("btn-undo").disabled = state.answers.length === 0;
 
-  // Node Repulsion
-  for (let i = 0; i < visibleNodes.length; i++) {
-    for (let j = i + 1; j < visibleNodes.length; j++) {
-      const a = visibleNodes[i];
-      const b = visibleNodes[j];
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      const distSq = dx * dx + dy * dy + 1;
-      if (distSq < 18000) {
-        const force = 260 / distSq;
-        a.vx -= dx * force;
-        a.vy -= dy * force;
-        b.vx += dx * force;
-        b.vy += dy * force;
+  const board = document.getElementById("candidates-board");
+  const badge = document.getElementById("remaining-count-badge");
+
+  if (!state.category) {
+    badge.textContent = "Waiting for category...";
+    board.innerHTML = `<div style="font-size: 19px; color: var(--text-muted); padding: 12px;">Pick a category above to start.</div>`;
+  } else {
+    badge.textContent = `${state.candidates.length} of ${state.initialPool.length} Conditions Possible`;
+    board.innerHTML = "";
+
+    if (state.candidates.length === 0) {
+      board.innerHTML = `
+        <div style="grid-column: 1 / -1; background: var(--danger-red-light); border: 2px solid var(--danger-red); border-radius: 12px; padding: 18px; font-weight: 700; color: var(--danger-red);">
+          No conditions match this combination. You can undo your last answer or proceed to view advice.
+        </div>
+      `;
+    } else {
+      state.candidates.forEach(disease => {
+        const matchedCount = disease.symptoms.filter(s => yesSet.has(s)).length;
+        const node = document.createElement("div");
+        node.className = `candidate-node ${matchedCount > 0 ? "highlighted" : ""}`;
+        node.innerHTML = `
+          <div class="candidate-node-title">${formatName(disease.id)}</div>
+          <div class="candidate-node-meta">
+            Confirmed: ${matchedCount} of ${disease.symptoms.length}
+          </div>
+        `;
+        board.appendChild(node);
+      });
+    }
+  }
+
+  document.getElementById("answers-count").textContent = state.answers.length;
+  const historyList = document.getElementById("answer-history-list");
+
+  if (state.answers.length === 0) {
+    historyList.innerHTML = `<div style="color: var(--text-muted); font-size: 18px;">No questions answered yet.</div>`;
+  } else {
+    historyList.innerHTML = "";
+    state.answers.forEach(item => {
+      const row = document.createElement("div");
+      row.className = "answer-pill";
+      row.innerHTML = `
+        <span>${formatName(item.symptom)}</span>
+        <span class="${item.answer === "yes" ? "answer-badge-yes" : "answer-badge-no"}">
+          ${item.answer.toUpperCase()}
+        </span>
+      `;
+      historyList.appendChild(row);
+    });
+  }
+
+  document.getElementById("btn-sidebar-finish").disabled = state.answers.length === 0;
+}
+
+/**
+ * ============================================================================
+ * 5. CONFIRMATION & RESULTS
+ * ============================================================================
+ */
+const confirmModal = document.getElementById("confirm-modal");
+
+function openConfirmationModal() {
+  const reviewBox = document.getElementById("modal-review-box");
+  const yesAnswers = state.answers.filter(a => a.answer === "yes");
+  const noAnswers = state.answers.filter(a => a.answer === "no");
+
+  let html = `<div style="margin-bottom: 14px;">
+    <strong style="color: var(--success-green); font-size: 20px;">✓ Present Symptoms (Answered YES):</strong>
+    <div style="margin-top: 6px; font-size: 20px; font-weight: 700;">
+      ${yesAnswers.length > 0 ? yesAnswers.map(a => formatName(a.symptom)).join(", ") : "None selected"}
+    </div>
+  </div>`;
+
+  html += `<div>
+    <strong style="color: var(--danger-red); font-size: 18px;">✕ Absent Symptoms (Answered NO):</strong>
+    <div style="margin-top: 6px; font-size: 18px; color: var(--text-muted);">
+      ${noAnswers.length > 0 ? noAnswers.map(a => formatName(a.symptom)).join(", ") : "None"}
+    </div>
+  </div>`;
+
+  reviewBox.innerHTML = html;
+  confirmModal.classList.add("active");
+}
+
+function renderResultsPage() {
+  const primaryContainer = document.getElementById("primary-result-container");
+  const fallbackContainer = document.getElementById("fallback-result-container");
+  primaryContainer.innerHTML = "";
+  fallbackContainer.innerHTML = "";
+
+  const yesSet = new Set(state.answers.filter(a => a.answer === "yes").map(a => a.symptom));
+
+  if (state.matchedDisease) {
+    const d = state.matchedDisease;
+    const desc = DISEASE_DESCRIPTIONS[d.id] || "No description available.";
+    primaryContainer.innerHTML = `
+      <div class="result-card">
+        <div style="font-size: 18px; font-weight: 700; color: var(--success-green); text-transform: uppercase;">
+          Most Likely Condition (${formatName(d.category)} Category)
+        </div>
+        <h1 class="result-title">${formatName(d.id)}</h1>
+        <div class="result-desc">${desc}</div>
+        <div style="font-size: 19px; font-weight: 700; color: var(--success-green);">
+          ✓ Confirmed Symptoms: ${d.symptoms.map(formatName).join(", ")}
+        </div>
+      </div>
+    `;
+  } else {
+    primaryContainer.innerHTML = `
+      <div class="result-card unknown-card">
+        <div style="font-size: 19px; font-weight: 800; color: var(--danger-red); text-transform: uppercase;">
+          Notice
+        </div>
+        <h1 class="result-title" style="color: var(--danger-red);">
+          Condition is unknown. Please visit a doctor immediately!
+        </h1>
+        <p style="font-size: 21px; color: var(--text-main); margin-bottom: 18px;">
+          Your answers did not match all required symptoms of a single condition.
+        </p>
+        ${state.category !== "extended" ? `
+          <button id="btn-switch-extended" class="btn-submit" style="background: var(--primary-blue); max-width: 480px;">
+            Try Extended Questioning (Check All 60 Conditions) →
+          </button>
+        ` : ""}
+      </div>
+    `;
+
+    if (yesSet.size > 0) {
+      const partialMatches = KNOWLEDGE_BASE
+        .map(d => ({
+          ...d,
+          matched: d.symptoms.filter(s => yesSet.has(s))
+        }))
+        .filter(d => d.matched.length > 0)
+        .sort((a, b) => (b.matched.length / b.symptoms.length) - (a.matched.length / a.symptoms.length))
+        .slice(0, 3);
+
+      if (partialMatches.length > 0) {
+        fallbackContainer.innerHTML = `
+          <div class="card" style="margin-top: 20px;">
+            <h3 style="font-size: 23px; margin-bottom: 8px;">Closest Partial Matches</h3>
+            ${partialMatches.map(item => `
+              <div style="border: 2px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; background: var(--bg-page);">
+                <div style="font-size: 22px; font-weight: 700;">
+                  ${formatName(item.id)}
+                  <span style="font-size: 17px; color: var(--success-green);">
+                    (Matched ${item.matched.length} of${item.symptoms.length} symptoms)
+                  </span>
+                </div>
+                <div style="font-size: 18px; color: var(--text-muted); margin-top: 6px;">
+                  ${DISEASE_DESCRIPTIONS[item.id] || ""}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
       }
     }
   }
 
-  // Spring Attraction along Edges
-  edges.forEach(e => {
-    if (e.source.hidden || e.target.hidden) return;
-    const isActive = state.selectedSymptoms.has(e.target.rawId);
-    const dx = e.target.x - e.source.x;
-    const dy = e.target.y - e.source.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    const targetDist = isActive ? 65 : 130;
-    const strength = isActive ? 0.025 : 0.004;
-    const f = (dist - targetDist) * strength;
-    const fx = (dx / dist) * f;
-    const fy = (dy / dist) * f;
+  document.getElementById("triage-page").classList.remove("active");
+  document.getElementById("results-page").classList.add("active");
+  window.scrollTo(0, 0);
 
-    e.source.vx += fx;
-    e.source.vy += fy;
-    e.target.vx -= fx;
-    e.target.vy -= fy;
-  });
-
-  // Center Gravity & Velocity Update
-  visibleNodes.forEach(n => {
-    const isMatchedDisease = n.type === "disease" && scoreMap.has(n.rawId);
-    const isSelectedSym = n.type === "symptom" && state.selectedSymptoms.has(n.rawId);
-    const gravity = (isMatchedDisease || isSelectedSym) ? 0.012 : 0.004;
-
-    n.vx += (cx - n.x) * gravity;
-    n.vy += (cy - n.y) * gravity;
-    n.vx *= 0.82;
-    n.vy *= 0.82;
-
-    if (n !== draggedNode) {
-      n.x += n.vx;
-      n.y += n.vy;
-    }
-  });
-
-  // Render Pass
-  ctx.clearRect(0, 0, rect.width, rect.height);
-  ctx.save();
-  ctx.translate(cx + camera.x, cy + camera.y);
-  ctx.scale(camera.zoom, camera.zoom);
-  ctx.translate(-cx, -cy);
-
-  // Draw Edges
-  edges.forEach(e => {
-    if (e.source.hidden || e.target.hidden) return;
-    const isSelectedSym = state.selectedSymptoms.has(e.target.rawId);
-    const dScore = scoreMap.get(e.source.rawId) || 0;
-
-    ctx.beginPath();
-    ctx.moveTo(e.source.x, e.source.y);
-    ctx.lineTo(e.target.x, e.target.y);
-    if (isSelectedSym && dScore > 0) {
-      ctx.strokeStyle = `rgba(188, 140, 255, ${0.25 + (dScore / 100) * 0.65})`;
-      ctx.lineWidth = 1.8;
-    } else {
-      ctx.strokeStyle = "rgba(48, 54, 61, 0.35)";
-      ctx.lineWidth = 0.7;
-    }
-    ctx.stroke();
-  });
-
-  // Draw Nodes
-  visibleNodes.forEach(n => {
-    const isSelectedSym = n.type === "symptom" && state.selectedSymptoms.has(n.rawId);
-    const dScore = n.type === "disease" ? (scoreMap.get(n.rawId) || 0) : 0;
-
-    ctx.beginPath();
-    let r = n.radius;
-    if (isSelectedSym) r = 8;
-    else if (dScore > 0) r = 6 + (dScore / 100) * 7;
-
-    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
-
-    if (isSelectedSym) {
-      ctx.fillStyle = "#3fb950";
-      ctx.shadowColor = "#3fb950";
-      ctx.shadowBlur = 12;
-    } else if (dScore > 0) {
-      ctx.fillStyle = dScore >= 60 ? "#bc8cff" : "#58a6ff";
-      ctx.shadowColor = ctx.fillStyle;
-      ctx.shadowBlur = 10;
-    } else {
-      ctx.fillStyle = n.type === "disease" ? "#30363d" : "#21262d";
-      ctx.shadowBlur = 0;
-    }
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Labels for active nodes or hovered node
-    if (isSelectedSym || dScore >= 35 || n === hoveredNode) {
-      ctx.font = (isSelectedSym || dScore >= 50) ? "600 11px sans-serif" : "10px sans-serif";
-      ctx.fillStyle = isSelectedSym ? "#7ee787" : (dScore > 0 ? "#e6edf3" : "#8b949e");
-      const labelText = dScore > 0 ? `${n.label} (${dScore}%)` : n.label;
-      ctx.fillText(labelText, n.x + r + 5, n.y + 3);
-    }
-  });
-
-  ctx.restore();
-  requestAnimationFrame(tickGraph);
+  const switchExtendedBtn = document.getElementById("btn-switch-extended");
+  if (switchExtendedBtn) {
+    switchExtendedBtn.addEventListener("click", () => {
+      document.getElementById("results-page").classList.remove("active");
+      document.getElementById("triage-page").classList.add("active");
+      startCategorySession("extended");
+    });
+  }
 }
 
 /**
  * ============================================================================
- * 5. UI RENDERING & EVENT HANDLERS
+ * 6. EVENT LISTENERS
  * ============================================================================
  */
-function renderSymptomsGrid() {
-  const grid = document.getElementById("symptoms-grid");
-  grid.innerHTML = "";
-
-  const filtered = ALL_SYMPTOMS.filter(sym => {
-    const matchesCat = state.activeCategory === "all" || SYMPTOM_MAP.get(sym).has(state.activeCategory);
-    const matchesSearch = formatLabel(sym).toLowerCase().includes(state.searchQuery.toLowerCase());
-    return matchesCat && matchesSearch;
-  });
-
-  filtered.forEach(sym => {
-    const chip = document.createElement("div");
-    const isSel = state.selectedSymptoms.has(sym);
-    chip.className = `symptom-chip ${isSel ? "selected" : ""}`;
-    chip.innerHTML = `<span>${isSel ? "✓" : "+"}</span> <span>${formatLabel(sym)}</span>`;
-    chip.addEventListener("click", () => toggleSymptom(sym));
-    grid.appendChild(chip);
-  });
-}
-
-function updateSidebar() {
-  const count = state.selectedSymptoms.size;
-  document.getElementById("selected-count").textContent = count;
-
-  // Progress bar & steps
-  const pct = count === 0 ? 0 : Math.min(90, 30 + count * 15);
-  document.getElementById("progress-pct").textContent = `${pct}%`;
-  document.getElementById("progress-fill").style.width = `${pct}%`;
-
-  document.getElementById("step-1").classList.toggle("done", state.activeCategory !== "all" || state.searchQuery !== "" || count > 0);
-  document.getElementById("step-2").classList.toggle("done", count > 0);
-
-  // Selected Symptoms Tray
-  const tray = document.getElementById("selected-tray");
-  if (count === 0) {
-    tray.innerHTML = `<span style="color:var(--text-muted);font-size:12px;">No symptoms selected yet.</span>`;
-  } else {
-    tray.innerHTML = "";
-    state.selectedSymptoms.forEach(sym => {
-      const tag = document.createElement("span");
-      tag.className = "symptom-chip selected";
-      tag.style.padding = "4px 9px";
-      tag.style.fontSize = "11.5px";
-      tag.innerHTML = `${formatLabel(sym)} ✕`;
-      tag.addEventListener("click", () => toggleSymptom(sym));
-      tray.appendChild(tag);
-    });
-  }
-
-  // Live Candidate Ranking
-  const candList = document.getElementById("candidate-list");
-  document.getElementById("candidate-count").textContent = `${state.rankedDiseases.length} active`;
-
-  if (state.rankedDiseases.length === 0) {
-    candList.innerHTML = `<div style="color:var(--text-muted);font-size:12px;">Select symptoms to rank diseases in real time.</div>`;
-  } else {
-    candList.innerHTML = "";
-    state.rankedDiseases.slice(0, 6).forEach(d => {
-      const item = document.createElement("div");
-      item.className = "candidate-item";
-      item.innerHTML = `
-        <div class="candidate-header">
-          <span>${formatLabel(d.id)}</span>
-          <span style="color:var(--accent-purple)">${d.score}% (${d.matched.length}/${d.symptoms.length})</span>
-        </div>
-        <div class="candidate-bar-bg">
-          <div class="candidate-bar-fill" style="width:${d.score}%"></div>
-        </div>
-      `;
-      candList.appendChild(item);
-    });
-  }
-
-  document.getElementById("btn-submit-triage").disabled = count === 0;
-}
-
-function toggleSymptom(sym) {
-  if (state.selectedSymptoms.has(sym)) {
-    state.selectedSymptoms.delete(sym);
-  } else {
-    state.selectedSymptoms.add(sym);
-  }
-  evaluateCandidates();
-  renderSymptomsGrid();
-  updateSidebar();
-}
-
-// Category Tabs
-document.querySelectorAll(".cat-tab").forEach(btn => {
+document.querySelectorAll(".category-card-btn").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".cat-tab").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    state.activeCategory = btn.dataset.cat;
-    renderSymptomsGrid();
-    updateSidebar();
+    startCategorySession(btn.dataset.cat);
   });
 });
 
-// Search Filter
-document.getElementById("symptom-search").addEventListener("input", e => {
-  state.searchQuery = e.target.value;
-  renderSymptomsGrid();
+document.getElementById("btn-answer-yes").addEventListener("click", () => recordAnswer("yes"));
+document.getElementById("btn-answer-no").addEventListener("click", () => recordAnswer("no"));
+document.getElementById("btn-undo").addEventListener("click", undoLastAnswer);
+
+document.getElementById("btn-change-category").addEventListener("click", () => {
+  state.category = null;
+  state.answers = [];
+  state.candidates = [];
+  state.isFinished = false;
+  document.getElementById("question-step-view").style.display = "none";
+  document.getElementById("category-step-view").style.display = "block";
+  renderWorkspace();
 });
 
-// Clear All
-document.getElementById("btn-clear-all").addEventListener("click", () => {
-  state.selectedSymptoms.clear();
-  evaluateCandidates();
-  renderSymptomsGrid();
-  updateSidebar();
-});
-
-// Graph Controls
-document.getElementById("btn-toggle-subgraph").addEventListener("click", e => {
-  state.subgraphOnly = !state.subgraphOnly;
-  e.target.classList.toggle("active", state.subgraphOnly);
-  e.target.textContent = `Active Subgraph Only: ${state.subgraphOnly ? "ON" : "OFF"}`;
-});
-
-document.getElementById("btn-reset-camera").addEventListener("click", () => {
-  camera.x = 0;
-  camera.y = 0;
-  camera.zoom = 0.95;
-});
-
-// Confirmation Modal Flow
-const confirmModal = document.getElementById("confirm-modal");
-
-document.getElementById("btn-submit-triage").addEventListener("click", () => {
-  const modalList = document.getElementById("modal-symptom-list");
-  modalList.innerHTML = "";
-  state.selectedSymptoms.forEach(sym => {
-    const chip = document.createElement("span");
-    chip.className = "symptom-chip selected";
-    chip.textContent = formatLabel(sym);
-    modalList.appendChild(chip);
-  });
-
-  // Check if top candidate has unchosen symptoms to prompt user verification
-  const top = state.rankedDiseases[0];
-  const suggestedBox = document.getElementById("modal-suggested-box");
-  if (top && top.missing.length > 0) {
-    suggestedBox.innerHTML = `<strong>Verification Tip:</strong> The top candidate (<em>${formatLabel(top.id)}</em>) also commonly involves: <strong>${top.missing.map(formatLabel).join(", ")}</strong>. If any of these are present, click "Wait, Add More Symptoms".`;
-  } else {
-    suggestedBox.innerHTML = "";
-  }
-
-  confirmModal.classList.add("active");
-});
+document.getElementById("btn-open-confirm-main").addEventListener("click", openConfirmationModal);
+document.getElementById("btn-sidebar-finish").addEventListener("click", openConfirmationModal);
 
 document.getElementById("btn-modal-back").addEventListener("click", () => {
   confirmModal.classList.remove("active");
@@ -635,61 +505,24 @@ document.getElementById("btn-modal-back").addEventListener("click", () => {
 
 document.getElementById("btn-modal-confirm").addEventListener("click", () => {
   confirmModal.classList.remove("active");
-  renderDiagnosticResultsPage();
-  document.getElementById("triage-view").classList.remove("active");
-  document.getElementById("results-view").classList.add("active");
+  renderResultsPage();
 });
 
-// Results Page Rendering
-function renderDiagnosticResultsPage() {
-  const top = state.rankedDiseases[0];
-  const primaryBox = document.getElementById("primary-result-box");
-  const desc = DISEASE_DESCRIPTIONS[top.id] || "No custom description provided. Edit DISEASE_DESCRIPTIONS in app.js.";
-
-  primaryBox.innerHTML = `
-    <span class="badge">Primary Match • ${top.category} Category • ${top.score}% Confidence</span>
-    <h1 class="diagnosis-title">${formatLabel(top.id)}</h1>
-    <div class="diagnosis-desc">${desc}</div>
-    <div style="font-size:13px;color:var(--text-muted);display:flex;gap:20px;flex-wrap:wrap;">
-      <div><strong style="color:var(--accent-green);">Matched Symptoms (${top.matched.length}/${top.symptoms.length}):</strong> ${top.matched.map(formatLabel).join(", ")}</div>
-      <div><strong style="color:var(--accent-amber);">Unreported Symptoms:</strong> ${top.missing.length ? top.missing.map(formatLabel).join(", ") : "None (100% Match)"}</div>
-    </div>
-  `;
-
-  const tbody = document.getElementById("diff-table-body");
-  tbody.innerHTML = "";
-  state.rankedDiseases.slice(1, 8).forEach(d => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><strong>${formatLabel(d.id)}</strong></td>
-      <td style="text-transform:capitalize;">${d.category}</td>
-      <td style="color:#7ee787;">${d.matched.map(formatLabel).join(", ")}</td>
-      <td style="color:var(--text-muted);">${d.missing.map(formatLabel).join(", ") || "—"}</td>
-      <td><strong style="color:var(--accent-purple);">${d.score}%</strong></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-document.getElementById("btn-back-to-triage").addEventListener("click", () => {
-  document.getElementById("results-view").classList.remove("active");
-  document.getElementById("triage-view").classList.add("active");
-  resizeCanvas();
+document.getElementById("btn-results-back").addEventListener("click", () => {
+  document.getElementById("results-page").classList.remove("active");
+  document.getElementById("triage-page").classList.add("active");
 });
 
-document.getElementById("btn-new-triage").addEventListener("click", () => {
-  state.selectedSymptoms.clear();
-  evaluateCandidates();
-  renderSymptomsGrid();
-  updateSidebar();
-  document.getElementById("results-view").classList.remove("active");
-  document.getElementById("triage-view").classList.add("active");
-  resizeCanvas();
+document.getElementById("btn-results-restart").addEventListener("click", () => {
+  state.category = null;
+  state.answers = [];
+  state.candidates = [];
+  state.isFinished = false;
+  document.getElementById("results-page").classList.remove("active");
+  document.getElementById("triage-page").classList.add("active");
+  document.getElementById("question-step-view").style.display = "none";
+  document.getElementById("category-step-view").style.display = "block";
+  renderWorkspace();
 });
 
-// Boot Application
-resizeCanvas();
-initGraphData();
-renderSymptomsGrid();
-updateSidebar();
-requestAnimationFrame(tickGraph);
+renderWorkspace();
