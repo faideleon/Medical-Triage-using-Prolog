@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Guided Health Symptom Checker</title>
+  <!-- Tau Prolog for executing the .pl logic file in the browser -->
+  <script src="https://cdn.jsdelivr.net/npm/tau-prolog@0.3.4/modules/core.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tau-prolog@0.3.4/modules/lists.js"></script>
   <style>
     :root {
       --bg-page: #f1f5f9;
@@ -45,6 +48,57 @@
       display: block;
     }
 
+    /* PROLOG FILE CONNECTION BAR */
+    .pl-status-bar {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 14px 22px 0 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .pl-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 10px;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+    }
+
+    .pl-status-pill.loaded {
+      border-color: var(--success-green);
+      color: var(--success-green);
+      background: var(--success-green-light);
+    }
+
+    .pl-status-pill.error {
+      border-color: var(--warning-amber);
+      color: var(--warning-amber);
+      background: var(--warning-amber-light);
+    }
+
+    .pl-file-label {
+      display: inline-block;
+      background: var(--bg-card);
+      border: 2px solid var(--primary-blue);
+      color: var(--primary-blue);
+      padding: 7px 14px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .pl-file-label:hover {
+      background: var(--primary-blue-light);
+    }
+
     /* MAIN 2-COLUMN WORKSPACE */
     .main-grid {
       display: grid;
@@ -52,8 +106,8 @@
       gap: 22px;
       max-width: 1440px;
       margin: 0 auto;
-      padding: 22px;
-      min-height: 100vh;
+      padding: 16px 22px 22px 22px;
+      min-height: calc(100vh - 60px);
     }
 
     @media (max-width: 1024px) {
@@ -88,7 +142,7 @@
       margin-bottom: 18px;
     }
 
-    /* CATEGORY SELECTION GRID (MATCHES PROLOG START MENU + EXTENDED) */
+    /* CATEGORY SELECTION GRID */
     .category-choice-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -109,9 +163,14 @@
       gap: 8px;
     }
 
-    .category-card-btn:hover {
+    .category-card-btn:hover:not(:disabled) {
       border-color: var(--primary-blue);
       background: var(--primary-blue-light);
+    }
+
+    .category-card-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
 
     .category-card-btn.extended-card {
@@ -160,6 +219,20 @@
       padding: 6px 14px;
       border-radius: 20px;
       margin-bottom: 16px;
+    }
+
+    /* Banner shown when a match is found but script keeps asking for similar diseases */
+    .continuing-match-banner {
+      display: none;
+      background: var(--warning-amber-light);
+      border: 2px solid var(--warning-amber);
+      color: var(--warning-amber);
+      font-weight: 700;
+      font-size: 17px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin: 0 auto 18px auto;
+      max-width: 680px;
     }
 
     .question-prompt {
@@ -212,7 +285,7 @@
       margin-top: 12px;
     }
 
-    /* DYNAMIC REAL-TIME CANDIDATE GRAPH / BOARD (BOTTOM-LEFT) */
+    /* DYNAMIC REAL-TIME CANDIDATE BOARD */
     .candidates-board {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -235,6 +308,11 @@
       border: 3px solid var(--success-green);
     }
 
+    .candidate-node.full-match {
+      background: var(--warning-amber-light);
+      border: 3px solid var(--warning-amber);
+    }
+
     .candidate-node-title {
       font-size: 19px;
       font-weight: 700;
@@ -247,7 +325,7 @@
       font-weight: 600;
     }
 
-    /* RIGHT SIDEBAR: PROGRESS BAR, INSTRUCTIONS & ANSWER LOG */
+    /* RIGHT SIDEBAR */
     .progress-container {
       background: var(--bg-page);
       border: 2px solid var(--border);
@@ -349,8 +427,12 @@
       font-weight: 700;
       cursor: pointer;
     }
-    .btn-secondary:hover {
+    .btn-secondary:hover:not(:disabled) {
       border-color: var(--text-main);
+    }
+    .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .btn-submit {
@@ -445,6 +527,20 @@
 
   <!-- PAGE 1: GUIDED QUESTIONING WORKSPACE -->
   <main id="triage-page" class="page-view active">
+
+    <!-- PROLOG LOGIC FILE STATUS BAR -->
+    <div class="pl-status-bar">
+      <div id="pl-status-pill" class="pl-status-pill">
+        Loading Prolog (.pl) logic...
+      </div>
+      <div>
+        <label for="pl-file-input" class="pl-file-label">
+          Load / Change .pl Logic File
+        </label>
+        <input id="pl-file-input" type="file" accept=".pl,.pro,.txt" style="display: none;" />
+      </div>
+    </div>
+
     <div class="main-grid">
 
       <!-- LEFT COLUMN: TOP (CATEGORY / YES-NO PROMPT) + BOTTOM (DYNAMIC CANDIDATE VIEW) -->
@@ -452,42 +548,45 @@
 
         <!-- TOP-LEFT: STEP 1 CATEGORY PICKER OR STEP 2 YES/NO QUESTION -->
         <section class="card">
-          <!-- Category Selection Screen (Matches Prolog start/0 + Extended Option) -->
           <div id="category-step-view">
             <h1 class="section-title">Step 1: Choose a Symptom Category</h1>
-            <p class="section-subtitle">Select where your main problem is, or choose Extended Questioning to check all conditions.</p>
+            <p class="section-subtitle">Select where your main problem is, or choose Extended Questioning to check all conditions from the Prolog knowledge base.</p>
 
             <div class="category-choice-grid">
               <button class="category-card-btn" data-cat="fever">
                 <span class="cat-number">Option 1</span>
                 <span class="cat-name">Fever</span>
-                <span class="cat-desc">Fever, cough, breathing, colds, headache, or infections (21 conditions)</span>
+                <span class="cat-desc">Fever, cough, breathing, colds, headache, or infections</span>
               </button>
 
               <button class="category-card-btn" data-cat="stomach">
                 <span class="cat-number">Option 2</span>
                 <span class="cat-name">Stomach</span>
-                <span class="cat-desc">Stomach pain, diarrhea, nausea, urination, skin, or eyes (22 conditions)</span>
+                <span class="cat-desc">Stomach pain, diarrhea, nausea, urination, skin, or eyes</span>
               </button>
 
               <button class="category-card-btn" data-cat="body">
                 <span class="cat-number">Option 3</span>
                 <span class="cat-name">Body</span>
-                <span class="cat-desc">Chest pain, heart, joints, weakness, nerves, or mood (17 conditions)</span>
+                <span class="cat-desc">Chest pain, heart, joints, weakness, nerves, or mood</span>
               </button>
 
               <button class="category-card-btn extended-card" data-cat="extended">
                 <span class="cat-number" style="background: var(--success-green);">Option 4 • Complete Check</span>
                 <span class="cat-name">Extended Questioning (Ask All)</span>
-                <span class="cat-desc">Checks all 60 conditions across Fever, Stomach, and Body together.</span>
+                <span class="cat-desc">Queries all conditions across Fever, Stomach, and Body together.</span>
               </button>
             </div>
           </div>
 
-          <!-- Yes/No Question Screen (Shown after picking a category) -->
+          <!-- Yes/No Question Screen -->
           <div id="question-step-view" style="display: none;">
             <div class="question-box">
               <span id="active-category-badge" class="question-category-tag">You picked: Fever</span>
+
+              <!-- Shown when a condition is already matched, but script continues asking for similar conditions -->
+              <div id="continuing-match-banner" class="continuing-match-banner"></div>
+
               <div id="question-text" class="question-prompt">Do you have fever?</div>
 
               <div id="yes-no-controls" class="yes-no-buttons">
@@ -522,7 +621,7 @@
             </span>
           </div>
           <p class="section-subtitle">
-            This board updates automatically in real time as you answer Yes or No above. Green cards match your "Yes" answers.
+            Updated live via Prolog <code>candidate/2</code> queries. Amber cards are already fully matched while similar conditions are still being checked.
           </p>
           <div id="candidates-board" class="candidates-board"></div>
         </section>
@@ -567,7 +666,7 @@
     </div>
   </main>
 
-  <!-- CONFIRMATION MODAL (ASKS USER TO CONFIRM PRESENT SYMPTOMS BEFORE SUBMITTING) -->
+  <!-- CONFIRMATION MODAL -->
   <div id="confirm-modal" class="modal-overlay">
     <div class="modal-card">
       <h2 style="font-size: 28px; margin-bottom: 10px;">Confirm Your Symptoms</h2>

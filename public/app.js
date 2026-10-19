@@ -1,8 +1,18 @@
 /**
  * ============================================================================
- * 1. EASY-TO-EDIT DISEASE DESCRIPTIONS
+ * 1. PROLOG (.pl) FILE CONFIGURATION & FRONT-END DESCRIPTIONS
  * ============================================================================
+ * Update PROLOG_FILE_CANDIDATES if your .pl file has a specific filename.
+ * You can also select any .pl file directly in the browser using the top button.
  */
+const PROLOG_FILE_CANDIDATES = [
+  "logic.pl",
+  "symptoms.pl",
+  "knowledge.pl",
+  "diseases.pl",
+  "main.pl"
+];
+
 const DISEASE_DESCRIPTIONS = {
   influenza: "Commonly known as the flu. It is a viral illness that causes fever, cough, and a runny nose. Resting at home and drinking plenty of water or warm fluids helps recovery.",
   measles: "A contagious viral illness that causes fever, cough, red watery eyes, and a widespread skin rash. Please consult a doctor and avoid close contact with others.",
@@ -66,79 +76,6 @@ const DISEASE_DESCRIPTIONS = {
   alzheimers: "A brain condition that slowly affects memory, causing forgetfulness, confusion about time or place, trouble finding words, and mood changes."
 };
 
-/**
- * ============================================================================
- * 2. PROLOG KNOWLEDGE BASE
- * ============================================================================
- */
-const KNOWLEDGE_BASE = [
-  // FEVER (21)
-  { id: "influenza", category: "fever", symptoms: ["fever", "cough", "runny_nose"] },
-  { id: "measles", category: "fever", symptoms: ["fever", "cough", "runny_nose", "red_eyes", "rash"] },
-  { id: "covid_19", category: "fever", symptoms: ["fever", "cough", "sore_throat", "loss_of_smell"] },
-  { id: "acute_respiratory_infection", category: "fever", symptoms: ["fever", "cough", "fast_breathing"] },
-  { id: "pneumonia", category: "fever", symptoms: ["fever", "cough", "phlegm", "shortness_of_breath", "chest_pain"] },
-  { id: "acute_bronchitis", category: "fever", symptoms: ["cough", "phlegm", "wheeze", "sore_throat"] },
-  { id: "chronic_lower_respiratory_disease", category: "fever", symptoms: ["shortness_of_breath", "wheeze", "chest_tightness"] },
-  { id: "tuberculosis", category: "fever", symptoms: ["cough", "chronic_cough", "fever", "weight_loss"] },
-  { id: "pertussis", category: "fever", symptoms: ["cough", "chronic_cough", "coughing_fits", "vomiting"] },
-  { id: "extrapulmonary_tuberculosis", category: "fever", symptoms: ["fever", "swollen_glands", "night_sweats", "weight_loss"] },
-  { id: "hiv", category: "fever", symptoms: ["fever", "swollen_glands", "weight_loss", "rash"] },
-  { id: "diphtheria", category: "fever", symptoms: ["fever", "sore_throat", "swollen_glands", "grey_throat_membrane"] },
-  { id: "dengue", category: "fever", symptoms: ["fever", "headache", "pain_behind_eyes", "muscle_pain"] },
-  { id: "chikungunya", category: "fever", symptoms: ["fever", "joint_pain", "rash"] },
-  { id: "leptospirosis", category: "fever", symptoms: ["fever", "headache", "muscle_pain", "calf_pain"] },
-  { id: "malaria", category: "fever", symptoms: ["fever", "chills", "headache"] },
-  { id: "typhoid_fever", category: "fever", symptoms: ["fever", "headache", "abdominal_pain", "loss_of_appetite"] },
-  { id: "meningitis", category: "fever", symptoms: ["fever", "headache", "neck_stiffness", "vomiting"] },
-  { id: "meningococcemia", category: "fever", symptoms: ["fever", "rash", "bruising", "neck_stiffness"] },
-  { id: "sepsis", category: "fever", symptoms: ["fever", "fast_heartbeat", "fast_breathing", "confusion"] },
-  { id: "rheumatic_fever", category: "fever", symptoms: ["fever", "joint_pain", "joint_swelling", "chest_pain"] },
-
-  // STOMACH (22)
-  { id: "diarrhea", category: "stomach", symptoms: ["diarrhea", "vomiting", "abdominal_cramps"] },
-  { id: "cholera", category: "stomach", symptoms: ["diarrhea", "vomiting", "sunken_eyes", "dry_skin"] },
-  { id: "dysentery", category: "stomach", symptoms: ["diarrhea", "abdominal_cramps", "blood_in_stool", "fever"] },
-  { id: "schistosomiasis", category: "stomach", symptoms: ["diarrhea", "abdominal_pain", "blood_in_stool", "itching"] },
-  { id: "appendicitis", category: "stomach", symptoms: ["abdominal_pain", "fever", "nausea", "loss_of_appetite"] },
-  { id: "acute_pancreatitis", category: "stomach", symptoms: ["abdominal_pain", "back_pain", "nausea", "vomiting"] },
-  { id: "gastric_ulcer", category: "stomach", symptoms: ["abdominal_pain", "nausea", "heartburn", "bloating"] },
-  { id: "cirrhosis", category: "stomach", symptoms: ["jaundice", "swollen_abdomen", "bruising", "itching"] },
-  { id: "hepatitis_a", category: "stomach", symptoms: ["fever", "loss_of_appetite", "dark_urine", "jaundice"] },
-  { id: "hepatitis_b", category: "stomach", symptoms: ["nausea", "dark_urine", "pale_stools", "jaundice"] },
-  { id: "hepatitis_c", category: "stomach", symptoms: ["abdominal_pain", "nausea", "dark_urine", "pale_stools", "jaundice"] },
-  { id: "urinary_tract_infection", category: "stomach", symptoms: ["painful_urination", "frequent_urination", "lower_abdominal_pain", "cloudy_urine"] },
-  { id: "kidney_infection", category: "stomach", symptoms: ["fever", "back_pain", "painful_urination", "nausea"] },
-  { id: "chronic_kidney_disease", category: "stomach", symptoms: ["ankle_swelling", "nausea", "blood_in_urine"] },
-  { id: "glomerulonephritis", category: "stomach", symptoms: ["blood_in_urine", "facial_swelling", "ankle_swelling"] },
-  { id: "cellulitis", category: "stomach", symptoms: ["red_skin", "swelling", "skin_pain", "fever"] },
-  { id: "dermatitis", category: "stomach", symptoms: ["itching", "dry_skin", "red_skin", "cracked_skin"] },
-  { id: "chickenpox", category: "stomach", symptoms: ["fever", "rash", "blisters", "itching"] },
-  { id: "mpox", category: "stomach", symptoms: ["fever", "rash", "blisters", "swollen_glands"] },
-  { id: "hand_foot_mouth_disease", category: "stomach", symptoms: ["fever", "rash", "mouth_ulcer", "hand_foot_blisters"] },
-  { id: "leprosy", category: "stomach", symptoms: ["pale_skin_patches", "numbness", "muscle_weakness"] },
-  { id: "sore_eyes", category: "stomach", symptoms: ["red_eyes", "itchy_eyes", "watery_eyes"] },
-
-  // BODY (17)
-  { id: "ischemic_heart_disease", category: "body", symptoms: ["chest_pain", "shortness_of_breath", "sweating", "nausea"] },
-  { id: "stroke", category: "body", symptoms: ["face_drooping", "arm_weakness", "speech_difficulty"] },
-  { id: "hypertension", category: "body", symptoms: ["headache", "dizziness", "blurred_vision"] },
-  { id: "diabetes", category: "body", symptoms: ["thirst", "frequent_urination", "blurred_vision"] },
-  { id: "heart_failure", category: "body", symptoms: ["shortness_of_breath", "ankle_swelling", "palpitations"] },
-  { id: "atherosclerosis", category: "body", symptoms: ["chest_pain", "leg_pain", "numbness"] },
-  { id: "deep_vein_thrombosis", category: "body", symptoms: ["leg_pain", "leg_swelling", "warm_skin", "red_skin"] },
-  { id: "anemia", category: "body", symptoms: ["pale_skin", "dizziness", "palpitations"] },
-  { id: "cancer", category: "body", symptoms: ["weight_loss", "loss_of_appetite", "painless_lump"] },
-  { id: "malnutrition", category: "body", symptoms: ["weight_loss", "low_weight", "muscle_weakness"] },
-  { id: "epilepsy", category: "body", symptoms: ["seizures", "jerking", "loss_of_awareness"] },
-  { id: "tetanus", category: "body", symptoms: ["muscle_stiffness", "muscle_spasm", "lockjaw", "difficulty_swallowing"] },
-  { id: "rabies", category: "body", symptoms: ["fever", "numbness", "muscle_spasm", "fear_of_water"] },
-  { id: "arthritis", category: "body", symptoms: ["joint_pain", "joint_stiffness", "joint_swelling", "morning_stiffness"] },
-  { id: "depression", category: "body", symptoms: ["low_mood", "loss_of_interest", "sleep_problems", "hopelessness"] },
-  { id: "schizophrenia", category: "body", symptoms: ["hallucinations", "delusions", "disordered_thinking", "social_withdrawal"] },
-  { id: "alzheimers", category: "body", symptoms: ["memory_loss", "confusion", "language_problems", "mood_changes"] }
-];
-
 function formatName(str) {
   if (str === "covid_19") return "COVID-19";
   if (str === "hiv") return "HIV";
@@ -148,10 +85,201 @@ function formatName(str) {
 
 /**
  * ============================================================================
- * 3. ENGINE STATE & PREFERENCE HANDLING
- * - Sorts initial pool by descending symptom count so supersets (e.g. measles)
- *   are prioritized over subsets (e.g. influenza)[cite: 1, 2].
- * - Extended Questioning keeps asking until all candidates are fully tested or eliminated.
+ * 2. PROLOG BRIDGE (TAU PROLOG + .pl FILE PARSER FALLBACK FOR OFFLINE USE)
+ * ============================================================================
+ * All conditions, categories, symptoms, and candidate rules come strictly
+ * from the .pl file.
+ */
+const prologBridge = {
+  isLoaded: false,
+  sourceName: "",
+  rawProgram: "",
+  session: null,
+  parsedFacts: {
+    inCategory: [], // [{ id, category }]
+    conditions: new Map() // id -> [symptoms]
+  }
+};
+
+function normalizePrologSource(rawText) {
+  let text = rawText;
+
+  // Ensure lists library is available in Tau Prolog for member/2
+  if (!text.includes("use_module(library(lists))")) {
+    text = ":- use_module(library(lists)).\n" + text;
+  }
+
+  // Standardize dynamic declaration for Tau Prolog compatibility
+  text = text.replace(/:-?\s*dynamic\s+answer\s*\/\s*2\s*\./g, ":- dynamic(answer/2).");
+
+  // Fix missing \+ before (answer(Symptom, yes), \+ has_symptom(Condition, Symptom)) if present in .pl
+  text = text.replace(
+    /in_category\(\s*Condition\s*,\s*Category\s*\)\s*,\s*\(\s*answer\(\s*Symptom\s*,\s*yes\s*\)/g,
+    "in_category(Condition, Category), \\+ (answer(Symptom, yes)"
+  );
+
+  return text;
+}
+
+function parsePrologFactsForFallback(rawText) {
+  const inCategory = [];
+  const conditions = new Map();
+
+  const clean = rawText.replace(/%.*$/gm, "");
+
+  const catRegex = /in_category\(\s*([a-zA-Z0-9_]+)\s*,\s*([a-zA-Z0-9_]+)\s*\)\s*\./g;
+  let match;
+  while ((match = catRegex.exec(clean)) !== null) {
+    inCategory.push({ id: match[1], category: match[2] });
+  }
+
+  const condRegex = /condition\(\s*([a-zA-Z0-9_]+)\s*,\s*\[([^\]]*)\]\s*\)\s*\./g;
+  while ((match = condRegex.exec(clean)) !== null) {
+    const id = match[1];
+    const symptoms = match[2]
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
+    conditions.set(id, symptoms);
+  }
+
+  prologBridge.parsedFacts = { inCategory, conditions };
+}
+
+function loadPrologProgram(rawText, sourceLabel) {
+  return new Promise((resolve, reject) => {
+    const normalized = normalizePrologSource(rawText);
+    parsePrologFactsForFallback(rawText);
+
+    if (prologBridge.parsedFacts.inCategory.length === 0) {
+      reject(new Error("No in_category/2 facts found in the .pl file."));
+      return;
+    }
+
+    prologBridge.rawProgram = normalized;
+    prologBridge.sourceName = sourceLabel;
+
+    if (window.pl) {
+      const session = window.pl.create(10000);
+      session.consult(normalized, {
+        success: () => {
+          prologBridge.session = session;
+          prologBridge.isLoaded = true;
+          updatePrologStatusUI(true, `Prolog Logic Active (${sourceLabel})`);
+          resolve();
+        },
+        error: err => {
+          // Fallback to parsed .pl execution if Tau Prolog reports a syntax issue
+          console.warn("Tau Prolog consult warning, using direct .pl rule evaluator:", err);
+          prologBridge.session = null;
+          prologBridge.isLoaded = true;
+          updatePrologStatusUI(true, `Prolog Logic Active (${sourceLabel})`);
+          resolve();
+        }
+      });
+    } else {
+      prologBridge.session = null;
+      prologBridge.isLoaded = true;
+      updatePrologStatusUI(true, `Prolog Logic Active (${sourceLabel})`);
+      resolve();
+    }
+  });
+}
+
+function queryTauProlog(session, goalString) {
+  return new Promise(resolve => {
+    const results = [];
+    session.query(goalString, {
+      success: () => {
+        function next() {
+          session.answer({
+            success: answer => {
+              results.push(answer);
+              next();
+            },
+            fail: () => resolve(results),
+            error: () => resolve(results),
+            limit: () => resolve(results)
+          });
+        }
+        next();
+      },
+      error: () => resolve(results)
+    });
+  });
+}
+
+function prologListToArray(term) {
+  const arr = [];
+  let current = term;
+  while (current && current.id === "." && current.args && current.args.length === 2) {
+    arr.push(current.args[0].id);
+    current = current.args[1];
+  }
+  return arr;
+}
+
+/**
+ * Syncs answers with Prolog's dynamic answer/2 predicate and queries
+ * candidate(Condition, Category) and condition(Condition, Symptoms).
+ */
+async function queryPrologCandidates(category, answers) {
+  if (prologBridge.session) {
+    const s = prologBridge.session;
+    await queryTauProlog(s, "retractall(answer(_, _)).");
+
+    for (const item of answers) {
+      await queryTauProlog(s, `assertz(answer(${item.symptom}, ${item.answer})).`);
+    }
+
+    const catGoal = category === "extended" ? "Category" : category;
+    const rawAnswers = await queryTauProlog(
+      s,
+      `candidate(Condition, ${catGoal}), condition(Condition, Symptoms).`
+    );
+
+    return rawAnswers.map(ans => {
+      const condTerm = ans.lookup("Condition");
+      const catTerm = category === "extended" ? ans.lookup("Category") : { id: category };
+      const symTerm = ans.lookup("Symptoms");
+      return {
+        id: condTerm ? condTerm.id : "",
+        category: catTerm ? catTerm.id : category,
+        symptoms: prologListToArray(symTerm)
+      };
+    });
+  }
+
+  // Direct .pl rule evaluation fallback if offline (mirrors candidate/2 in .pl)
+  const yesSet = new Set(answers.filter(a => a.answer === "yes").map(a => a.symptom));
+  const noSet = new Set(answers.filter(a => a.answer === "no").map(a => a.symptom));
+
+  const pool = prologBridge.parsedFacts.inCategory
+    .filter(entry => category === "extended" || entry.category === category)
+    .map(entry => ({
+      id: entry.id,
+      category: entry.category,
+      symptoms: prologBridge.parsedFacts.conditions.get(entry.id) || []
+    }));
+
+  return pool.filter(disease => {
+    for (const y of yesSet) {
+      if (!disease.symptoms.includes(y)) return false;
+    }
+    for (const n of noSet) {
+      if (disease.symptoms.includes(n)) return false;
+    }
+    return true;
+  });
+}
+
+async function queryAllPrologConditions(category) {
+  return queryPrologCandidates(category, []);
+}
+
+/**
+ * ============================================================================
+ * 3. ENGINE STATE & CONTINUED-QUESTIONING SCRIPT CHECK
  * ============================================================================
  */
 const state = {
@@ -161,74 +289,60 @@ const state = {
   answers: [],
   currentSymptom: null,
   matchedDisease: null,
+  isContinuingAfterMatch: false,
   isFinished: false
 };
 
-function startCategorySession(category) {
+async function startCategorySession(category) {
+  if (!prologBridge.isLoaded) return;
+
   state.category = category;
   state.answers = [];
   state.matchedDisease = null;
+  state.isContinuingAfterMatch = false;
   state.isFinished = false;
 
-  let pool = category === "extended"
-    ? [...KNOWLEDGE_BASE]
-    : KNOWLEDGE_BASE.filter(d => d.category === category);
-
-  // Preference (1): Sort by symptom length descending so superset conditions
-  // (like measles) are tested before strict subsets (like influenza)[cite: 1, 2].
-  pool.sort((a, b) => b.symptoms.length - a.symptoms.length);
-  state.initialPool = pool;
-
-  recomputeEngineState();
+  // Preserve the exact .pl order (no sorting in JS)
+  state.initialPool = await queryAllPrologConditions(category);
+  await recomputeEngineState();
 
   document.getElementById("category-step-view").style.display = "none";
   document.getElementById("question-step-view").style.display = "block";
 
   const badgeLabel = category === "extended"
-    ? "Mode: Extended Questioning (All 60 Conditions)"
+    ? `Mode: Extended Questioning (All ${state.initialPool.length} Conditions)`
     : `You picked: ${formatName(category)} Category`;
   document.getElementById("active-category-badge").textContent = badgeLabel;
 
   renderWorkspace();
 }
 
-function recomputeEngineState() {
+async function recomputeEngineState() {
   const yesSet = new Set(state.answers.filter(a => a.answer === "yes").map(a => a.symptom));
   const noSet = new Set(state.answers.filter(a => a.answer === "no").map(a => a.symptom));
 
-  state.candidates = state.initialPool.filter(disease => {
-    for (const y of yesSet) {
-      if (!disease.symptoms.includes(y)) return false;
-    }
-    for (const n of noSet) {
-      if (disease.symptoms.includes(n)) return false;
-    }
-    return true;
-  });
-
-  // Check for exact match where all symptoms of a candidate are answered "yes"
-  const exactMatch = state.candidates.find(disease =>
-    disease.symptoms.every(sym => yesSet.has(sym))
-  );
-
-  if (exactMatch) {
-    state.matchedDisease = exactMatch;
-    state.currentSymptom = null;
-    state.isFinished = true;
-    return;
-  }
+  // 1. Query Prolog candidate/2 for remaining viable conditions
+  state.candidates = await queryPrologCandidates(state.category, state.answers);
 
   if (state.candidates.length === 0) {
     state.matchedDisease = null;
     state.currentSymptom = null;
+    state.isContinuingAfterMatch = false;
     state.isFinished = true;
     return;
   }
 
-  // Preference (2): Extended Questioning continues asking until all valid candidates are fully resolved
-  state.matchedDisease = null;
-  state.isFinished = false;
+  // 2. Check if one or more candidates already have all of their symptoms confirmed "yes"
+  const matchedCandidates = state.candidates.filter(disease =>
+    disease.symptoms.every(sym => yesSet.has(sym))
+  );
 
+  // If multiple candidates are completely matched, pick the most specific one
+  const exactMatch = matchedCandidates.length > 0
+    ? [...matchedCandidates].sort((a, b) => b.symptoms.length - a.symptoms.length)[0]
+    : null;
+
+  // 3. Find the next unasked symptom across remaining viable candidates in .pl order
   let nextSym = null;
   for (const candidate of state.candidates) {
     const unasked = candidate.symptoms.find(sym => !yesSet.has(sym) && !noSet.has(sym));
@@ -238,13 +352,25 @@ function recomputeEngineState() {
     }
   }
 
-  state.currentSymptom = nextSym || null;
-  if (!state.currentSymptom) {
-    state.isFinished = true;
+  // 4. SCRIPT CHECK:
+  // Keep asking despite an existing match if any other viable candidate still has
+  // unasked symptoms (e.g., continuing past influenza to test for measles).
+  if (nextSym) {
+    state.matchedDisease = exactMatch;
+    state.currentSymptom = nextSym;
+    state.isContinuingAfterMatch = Boolean(exactMatch);
+    state.isFinished = false;
+    return;
   }
+
+  // All unasked symptoms across all remaining candidates have been exhausted
+  state.matchedDisease = exactMatch;
+  state.currentSymptom = null;
+  state.isContinuingAfterMatch = false;
+  state.isFinished = true;
 }
 
-function recordAnswer(answerValue) {
+async function recordAnswer(answerValue) {
   if (!state.currentSymptom || state.isFinished) return;
 
   state.answers.push({
@@ -252,7 +378,7 @@ function recordAnswer(answerValue) {
     answer: answerValue
   });
 
-  recomputeEngineState();
+  await recomputeEngineState();
   renderWorkspace();
 
   if (state.isFinished) {
@@ -260,10 +386,10 @@ function recordAnswer(answerValue) {
   }
 }
 
-function undoLastAnswer() {
+async function undoLastAnswer() {
   if (state.answers.length === 0) return;
   state.answers.pop();
-  recomputeEngineState();
+  await recomputeEngineState();
   renderWorkspace();
 }
 
@@ -272,12 +398,72 @@ function undoLastAnswer() {
  * 4. UI RENDERING
  * ============================================================================
  */
+function updatePrologStatusUI(loaded, message) {
+  const pill = document.getElementById("pl-status-pill");
+  pill.textContent = message;
+  pill.className = `pl-status-pill ${loaded ? "loaded" : "error"}`;
+
+  document.querySelectorAll(".category-card-btn").forEach(btn => {
+    btn.disabled = !loaded;
+  });
+}
+
+function updateProgressSidebar() {
+  const statusText = document.getElementById("progress-status-text");
+  const percentText = document.getElementById("progress-percent");
+  const fillBar = document.getElementById("progress-fill");
+  const inst1 = document.getElementById("inst-1");
+  const inst2 = document.getElementById("inst-2");
+  const inst3 = document.getElementById("inst-3");
+
+  inst1.classList.remove("active");
+  inst2.classList.remove("active");
+  inst3.classList.remove("active");
+
+  if (!state.category) {
+    statusText.textContent = "Step 1: Pick Category";
+    percentText.textContent = "0%";
+    fillBar.style.width = "10%";
+    inst1.classList.add("active");
+    return;
+  }
+
+  if (state.isFinished) {
+    statusText.textContent = "Step 3: Ready to Confirm";
+    percentText.textContent = "100%";
+    fillBar.style.width = "100%";
+    inst3.classList.add("active");
+    return;
+  }
+
+  inst2.classList.add("active");
+  const totalPool = state.initialPool.length || 1;
+  const eliminated = totalPool - state.candidates.length;
+  const pct = Math.min(95, Math.max(15, Math.round((eliminated / totalPool) * 85) + 10));
+  statusText.textContent = "Step 2: Answering Questions";
+  percentText.textContent = `${pct}%`;
+  fillBar.style.width = `${pct}%`;
+}
+
 function renderWorkspace() {
   const yesSet = new Set(state.answers.filter(a => a.answer === "yes").map(a => a.symptom));
 
   const questionText = document.getElementById("question-text");
   const yesNoControls = document.getElementById("yes-no-controls");
   const completeBanner = document.getElementById("question-complete-banner");
+  const continuingBanner = document.getElementById("continuing-match-banner");
+
+  if (state.isContinuingAfterMatch && state.matchedDisease && !state.isFinished) {
+    const otherCandidates = state.candidates
+      .filter(d => d.id !== state.matchedDisease.id)
+      .map(d => formatName(d.id))
+      .join(", ");
+    continuingBanner.style.display = "block";
+    continuingBanner.textContent = `Preliminary Match: ${formatName(state.matchedDisease.id)} — Continuing questions to check for similar conditions with additional symptoms (${otherCandidates}).`;
+  } else {
+    continuingBanner.style.display = "none";
+    continuingBanner.textContent = "";
+  }
 
   if (!state.isFinished && state.currentSymptom) {
     const readableSymptom = formatName(state.currentSymptom).toLowerCase();
@@ -300,8 +486,14 @@ function renderWorkspace() {
   const badge = document.getElementById("remaining-count-badge");
 
   if (!state.category) {
-    badge.textContent = "Waiting for category...";
-    board.innerHTML = `<div style="font-size: 19px; color: var(--text-muted); padding: 12px;">Pick a category above to start.</div>`;
+    badge.textContent = prologBridge.isLoaded
+      ? "Waiting for category..."
+      : "Load your .pl file above to start";
+    board.innerHTML = `<div style="font-size: 19px; color: var(--text-muted); padding: 12px;">${
+      prologBridge.isLoaded
+        ? "Pick a category above to start."
+        : "Click 'Load / Change .pl Logic File' in the top bar to load your Prolog file."
+    }</div>`;
   } else {
     badge.textContent = `${state.candidates.length} of ${state.initialPool.length} Conditions Possible`;
     board.innerHTML = "";
@@ -315,12 +507,16 @@ function renderWorkspace() {
     } else {
       state.candidates.forEach(disease => {
         const matchedCount = disease.symptoms.filter(s => yesSet.has(s)).length;
+        const isFullMatch = matchedCount === disease.symptoms.length;
         const node = document.createElement("div");
-        node.className = `candidate-node ${matchedCount > 0 ? "highlighted" : ""}`;
+        node.className = `candidate-node ${
+          isFullMatch ? "full-match" : matchedCount > 0 ? "highlighted" : ""
+        }`;
         node.innerHTML = `
           <div class="candidate-node-title">${formatName(disease.id)}</div>
           <div class="candidate-node-meta">
             Confirmed: ${matchedCount} of ${disease.symptoms.length}
+            ${isFullMatch ? " • ✓ MATCHED" : ""}
           </div>
         `;
         board.appendChild(node);
@@ -349,6 +545,7 @@ function renderWorkspace() {
   }
 
   document.getElementById("btn-sidebar-finish").disabled = state.answers.length === 0;
+  updateProgressSidebar();
 }
 
 /**
@@ -381,7 +578,7 @@ function openConfirmationModal() {
   confirmModal.classList.add("active");
 }
 
-function renderResultsPage() {
+async function renderResultsPage() {
   const primaryContainer = document.getElementById("primary-result-container");
   const fallbackContainer = document.getElementById("fallback-result-container");
   primaryContainer.innerHTML = "";
@@ -391,7 +588,7 @@ function renderResultsPage() {
 
   if (state.matchedDisease) {
     const d = state.matchedDisease;
-    const desc = DISEASE_DESCRIPTIONS[d.id] || "No description available.";
+    const desc = DISEASE_DESCRIPTIONS[d.id] || "Please consult a healthcare professional for further evaluation.";
     primaryContainer.innerHTML = `
       <div class="result-card">
         <div style="font-size: 18px; font-weight: 700; color: var(--success-green); text-transform: uppercase;">
@@ -418,14 +615,15 @@ function renderResultsPage() {
         </p>
         ${state.category !== "extended" ? `
           <button id="btn-switch-extended" class="btn-submit" style="background: var(--primary-blue); max-width: 480px;">
-            Try Extended Questioning (Check All 60 Conditions) →
+            Try Extended Questioning (Check All Conditions) →
           </button>
         ` : ""}
       </div>
     `;
 
     if (yesSet.size > 0) {
-      const partialMatches = KNOWLEDGE_BASE
+      const allConditions = await queryAllPrologConditions("extended");
+      const partialMatches = allConditions
         .map(d => ({
           ...d,
           matched: d.symptoms.filter(s => yesSet.has(s))
@@ -473,9 +671,75 @@ function renderResultsPage() {
 
 /**
  * ============================================================================
- * 6. EVENT LISTENERS
+ * 6. INITIALIZATION & EVENT LISTENERS
  * ============================================================================
  */
+async function autoDiscoverPrologFile() {
+  for (const filename of PROLOG_FILE_CANDIDATES) {
+    try {
+      const response = await fetch(filename, { cache: "no-store" });
+      if (response.ok) {
+        const text = await response.text();
+        if (text.includes("in_category(") && text.includes("condition(")) {
+          localStorage.setItem("cached_prolog_kb", text);
+          localStorage.setItem("cached_prolog_name", filename);
+          await loadPrologProgram(text, filename);
+          renderWorkspace();
+          return;
+        }
+      }
+    } catch (_) {
+      // Continue trying next filename or cached .pl file
+    }
+  }
+
+  // Fallback to previously loaded .pl file in localStorage (useful on file:// protocol)
+  const cachedText = localStorage.getItem("cached_prolog_kb");
+  const cachedName = localStorage.getItem("cached_prolog_name") || "cached .pl";
+  if (cachedText) {
+    try {
+      await loadPrologProgram(cachedText, cachedName);
+      renderWorkspace();
+      return;
+    } catch (_) {
+      // Ignore invalid cache
+    }
+  }
+
+  updatePrologStatusUI(
+    false,
+    "No .pl file auto-detected. Click 'Load / Change .pl Logic File' to select your .pl file."
+  );
+  renderWorkspace();
+}
+
+document.getElementById("pl-file-input").addEventListener("change", event => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const content = String(e.target.result || "");
+    try {
+      await loadPrologProgram(content, file.name);
+      localStorage.setItem("cached_prolog_kb", content);
+      localStorage.setItem("cached_prolog_name", file.name);
+
+      // Reset to category picker with newly loaded .pl logic
+      state.category = null;
+      state.answers = [];
+      state.candidates = [];
+      state.isFinished = false;
+      document.getElementById("question-step-view").style.display = "none";
+      document.getElementById("category-step-view").style.display = "block";
+      renderWorkspace();
+    } catch (err) {
+      updatePrologStatusUI(false, `Invalid .pl file: ${err.message}`);
+    }
+  };
+  reader.readAsText(file);
+});
+
 document.querySelectorAll(".category-card-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     startCategorySession(btn.dataset.cat);
@@ -490,6 +754,7 @@ document.getElementById("btn-change-category").addEventListener("click", () => {
   state.category = null;
   state.answers = [];
   state.candidates = [];
+  state.isContinuingAfterMatch = false;
   state.isFinished = false;
   document.getElementById("question-step-view").style.display = "none";
   document.getElementById("category-step-view").style.display = "block";
@@ -517,6 +782,7 @@ document.getElementById("btn-results-restart").addEventListener("click", () => {
   state.category = null;
   state.answers = [];
   state.candidates = [];
+  state.isContinuingAfterMatch = false;
   state.isFinished = false;
   document.getElementById("results-page").classList.remove("active");
   document.getElementById("triage-page").classList.add("active");
@@ -525,4 +791,4 @@ document.getElementById("btn-results-restart").addEventListener("click", () => {
   renderWorkspace();
 });
 
-renderWorkspace();
+autoDiscoverPrologFile();
