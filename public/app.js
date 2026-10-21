@@ -1,18 +1,3 @@
-/**
- * ============================================================================
- * 1. PROLOG (.pl) FILE CONFIGURATION & FRONT-END DESCRIPTIONS
- * ============================================================================
- * Update PROLOG_FILE_CANDIDATES if your .pl file has a specific filename.
- * You can also select any .pl file directly in the browser using the top button.
- */
-const PROLOG_FILE_CANDIDATES = [
-  "logic.pl",
-  "symptoms.pl",
-  "knowledge.pl",
-  "diseases.pl",
-  "main.pl"
-];
-
 const DISEASE_DESCRIPTIONS = {
   influenza: "Commonly known as the flu. It is a viral illness that causes fever, cough, and a runny nose. Resting at home and drinking plenty of water or warm fluids helps recovery.",
   measles: "A contagious viral illness that causes fever, cough, red watery eyes, and a widespread skin rash. Please consult a doctor and avoid close contact with others.",
@@ -83,194 +68,21 @@ function formatName(str) {
   return str.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
-/**
- * ============================================================================
- * 2. PROLOG BRIDGE (TAU PROLOG + .pl FILE PARSER FALLBACK FOR OFFLINE USE)
- * ============================================================================
- * All conditions, categories, symptoms, and candidate rules come strictly
- * from the .pl file.
- */
 const prologBridge = {
-  isLoaded: false,
-  sourceName: "",
-  rawProgram: "",
-  session: null,
-  parsedFacts: {
-    inCategory: [], // [{ id, category }]
-    conditions: new Map() // id -> [symptoms]
-  }
+  isLoaded: false
 };
 
-function normalizePrologSource(rawText) {
-  let text = rawText;
-
-  // Ensure lists library is available in Tau Prolog for member/2
-  if (!text.includes("use_module(library(lists))")) {
-    text = ":- use_module(library(lists)).\n" + text;
-  }
-
-  // Standardize dynamic declaration for Tau Prolog compatibility
-  text = text.replace(/:-?\s*dynamic\s+answer\s*\/\s*2\s*\./g, ":- dynamic(answer/2).");
-
-  // Fix missing \+ before (answer(Symptom, yes), \+ has_symptom(Condition, Symptom)) if present in .pl
-  text = text.replace(
-    /in_category\(\s*Condition\s*,\s*Category\s*\)\s*,\s*\(\s*answer\(\s*Symptom\s*,\s*yes\s*\)/g,
-    "in_category(Condition, Category), \\+ (answer(Symptom, yes)"
-  );
-
-  return text;
-}
-
-function parsePrologFactsForFallback(rawText) {
-  const inCategory = [];
-  const conditions = new Map();
-
-  const clean = rawText.replace(/%.*$/gm, "");
-
-  const catRegex = /in_category\(\s*([a-zA-Z0-9_]+)\s*,\s*([a-zA-Z0-9_]+)\s*\)\s*\./g;
-  let match;
-  while ((match = catRegex.exec(clean)) !== null) {
-    inCategory.push({ id: match[1], category: match[2] });
-  }
-
-  const condRegex = /condition\(\s*([a-zA-Z0-9_]+)\s*,\s*\[([^\]]*)\]\s*\)\s*\./g;
-  while ((match = condRegex.exec(clean)) !== null) {
-    const id = match[1];
-    const symptoms = match[2]
-      .split(",")
-      .map(s => s.trim())
-      .filter(Boolean);
-    conditions.set(id, symptoms);
-  }
-
-  prologBridge.parsedFacts = { inCategory, conditions };
-}
-
-function loadPrologProgram(rawText, sourceLabel) {
-  return new Promise((resolve, reject) => {
-    const normalized = normalizePrologSource(rawText);
-    parsePrologFactsForFallback(rawText);
-
-    if (prologBridge.parsedFacts.inCategory.length === 0) {
-      reject(new Error("No in_category/2 facts found in the .pl file."));
-      return;
-    }
-
-    prologBridge.rawProgram = normalized;
-    prologBridge.sourceName = sourceLabel;
-
-    if (window.pl) {
-      const session = window.pl.create(10000);
-      session.consult(normalized, {
-        success: () => {
-          prologBridge.session = session;
-          prologBridge.isLoaded = true;
-          updatePrologStatusUI(true, `Prolog Logic Active (${sourceLabel})`);
-          resolve();
-        },
-        error: err => {
-          // Fallback to parsed .pl execution if Tau Prolog reports a syntax issue
-          console.warn("Tau Prolog consult warning, using direct .pl rule evaluator:", err);
-          prologBridge.session = null;
-          prologBridge.isLoaded = true;
-          updatePrologStatusUI(true, `Prolog Logic Active (${sourceLabel})`);
-          resolve();
-        }
-      });
-    } else {
-      prologBridge.session = null;
-      prologBridge.isLoaded = true;
-      updatePrologStatusUI(true, `Prolog Logic Active (${sourceLabel})`);
-      resolve();
-    }
-  });
-}
-
-function queryTauProlog(session, goalString) {
-  return new Promise(resolve => {
-    const results = [];
-    session.query(goalString, {
-      success: () => {
-        function next() {
-          session.answer({
-            success: answer => {
-              results.push(answer);
-              next();
-            },
-            fail: () => resolve(results),
-            error: () => resolve(results),
-            limit: () => resolve(results)
-          });
-        }
-        next();
-      },
-      error: () => resolve(results)
-    });
-  });
-}
-
-function prologListToArray(term) {
-  const arr = [];
-  let current = term;
-  while (current && current.id === "." && current.args && current.args.length === 2) {
-    arr.push(current.args[0].id);
-    current = current.args[1];
-  }
-  return arr;
-}
-
-/**
- * Syncs answers with Prolog's dynamic answer/2 predicate and queries
- * candidate(Condition, Category) and condition(Condition, Symptoms).
- */
 async function queryPrologCandidates(category, answers) {
-  if (prologBridge.session) {
-    const s = prologBridge.session;
-    await queryTauProlog(s, "retractall(answer(_, _)).");
-
-    for (const item of answers) {
-      await queryTauProlog(s, `assertz(answer(${item.symptom}, ${item.answer})).`);
-    }
-
-    const catGoal = category === "extended" ? "Category" : category;
-    const rawAnswers = await queryTauProlog(
-      s,
-      `candidate(Condition, ${catGoal}), condition(Condition, Symptoms).`
-    );
-
-    return rawAnswers.map(ans => {
-      const condTerm = ans.lookup("Condition");
-      const catTerm = category === "extended" ? ans.lookup("Category") : { id: category };
-      const symTerm = ans.lookup("Symptoms");
-      return {
-        id: condTerm ? condTerm.id : "",
-        category: catTerm ? catTerm.id : category,
-        symptoms: prologListToArray(symTerm)
-      };
-    });
-  }
-
-  // Direct .pl rule evaluation fallback if offline (mirrors candidate/2 in .pl)
-  const yesSet = new Set(answers.filter(a => a.answer === "yes").map(a => a.symptom));
-  const noSet = new Set(answers.filter(a => a.answer === "no").map(a => a.symptom));
-
-  const pool = prologBridge.parsedFacts.inCategory
-    .filter(entry => category === "extended" || entry.category === category)
-    .map(entry => ({
-      id: entry.id,
-      category: entry.category,
-      symptoms: prologBridge.parsedFacts.conditions.get(entry.id) || []
-    }));
-
-  return pool.filter(disease => {
-    for (const y of yesSet) {
-      if (!disease.symptoms.includes(y)) return false;
-    }
-    for (const n of noSet) {
-      if (disease.symptoms.includes(n)) return false;
-    }
-    return true;
+  const response = await fetch("/api/triage", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category, answers })
   });
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.error || "Prolog API request failed.");
+  }
+  return result.candidates;
 }
 
 async function queryAllPrologConditions(category) {
@@ -675,70 +487,16 @@ async function renderResultsPage() {
  * ============================================================================
  */
 async function autoDiscoverPrologFile() {
-  for (const filename of PROLOG_FILE_CANDIDATES) {
-    try {
-      const response = await fetch(filename, { cache: "no-store" });
-      if (response.ok) {
-        const text = await response.text();
-        if (text.includes("in_category(") && text.includes("condition(")) {
-          localStorage.setItem("cached_prolog_kb", text);
-          localStorage.setItem("cached_prolog_name", filename);
-          await loadPrologProgram(text, filename);
-          renderWorkspace();
-          return;
-        }
-      }
-    } catch (_) {
-      // Continue trying next filename or cached .pl file
-    }
+  try {
+    await queryPrologCandidates("fever", []);
+    prologBridge.isLoaded = true;
+    updatePrologStatusUI(true, "Connected to Prolog");
+  } catch (error) {
+    prologBridge.isLoaded = false;
+    updatePrologStatusUI(false, `Cannot connect to Prolog: ${error.message}`);
   }
-
-  // Fallback to previously loaded .pl file in localStorage (useful on file:// protocol)
-  const cachedText = localStorage.getItem("cached_prolog_kb");
-  const cachedName = localStorage.getItem("cached_prolog_name") || "cached .pl";
-  if (cachedText) {
-    try {
-      await loadPrologProgram(cachedText, cachedName);
-      renderWorkspace();
-      return;
-    } catch (_) {
-      // Ignore invalid cache
-    }
-  }
-
-  updatePrologStatusUI(
-    false,
-    "No .pl file auto-detected. Click 'Load / Change .pl Logic File' to select your .pl file."
-  );
   renderWorkspace();
 }
-
-document.getElementById("pl-file-input").addEventListener("change", event => {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = async e => {
-    const content = String(e.target.result || "");
-    try {
-      await loadPrologProgram(content, file.name);
-      localStorage.setItem("cached_prolog_kb", content);
-      localStorage.setItem("cached_prolog_name", file.name);
-
-      // Reset to category picker with newly loaded .pl logic
-      state.category = null;
-      state.answers = [];
-      state.candidates = [];
-      state.isFinished = false;
-      document.getElementById("question-step-view").style.display = "none";
-      document.getElementById("category-step-view").style.display = "block";
-      renderWorkspace();
-    } catch (err) {
-      updatePrologStatusUI(false, `Invalid .pl file: ${err.message}`);
-    }
-  };
-  reader.readAsText(file);
-});
 
 document.querySelectorAll(".category-card-btn").forEach(btn => {
   btn.addEventListener("click", () => {

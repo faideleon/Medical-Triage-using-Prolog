@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Guided Health Symptom Checker</title>
-  <!-- Tau Prolog for executing the .pl logic file in the browser -->
-  <script src="https://cdn.jsdelivr.net/npm/tau-prolog@0.3.4/modules/core.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tau-prolog@0.3.4/modules/lists.js"></script>
   <style>
     :root {
       --bg-page: #f1f5f9;
@@ -528,16 +525,10 @@
   <!-- PAGE 1: GUIDED QUESTIONING WORKSPACE -->
   <main id="triage-page" class="page-view active">
 
-    <!-- PROLOG LOGIC FILE STATUS BAR -->
+    <!-- PROLOG API STATUS -->
     <div class="pl-status-bar">
       <div id="pl-status-pill" class="pl-status-pill">
-        Loading Prolog (.pl) logic...
-      </div>
-      <div>
-        <label for="pl-file-input" class="pl-file-label">
-          Load / Change .pl Logic File
-        </label>
-        <input id="pl-file-input" type="file" accept=".pl,.pro,.txt" style="display: none;" />
+        Connecting to Prolog...
       </div>
     </div>
 

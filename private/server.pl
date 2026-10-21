@@ -1,3 +1,14 @@
+:- use_module(library(http/thread_httpd)).
+:- use_module(library(http/http_dispatch)).
+:- use_module(library(http/http_json)).
+:- use_module(library(http/http_files)).
+:- use_module(library(filesex)).
+:- use_module(library(lists)).
+:- use_module(library(error)).
+
+:- http_handler(root(api/triage), handle_triage, [method(post)]).
+:- http_handler(root(.), serve_public, [prefix]).
+
 %FACTS
 
 % Conditions divided into three categories: Fever, Stomach, Body
@@ -216,3 +227,78 @@ choice(3, body).
 has_symptom(Condition, Symptom) :-
 	condition(Condition, Symptoms),
 	member(Symptom, Symptoms).
+
+
+
+% HTTP API
+
+% Start with ?- start_server. or ?- start_server(Port).
+start_server :-
+	start_server(8000).
+
+% Start the HTTP server on the specified port. The port must be an integer.
+start_server(Port) :-
+	must_be(integer, Port),
+	http_server(http_dispatch, [port(Port)]).
+
+% Serve static files from the public directory. 
+% The public directory is located in the parent directory of the private directory.
+serve_public(Request) :-
+	source_file(start_server(_), SourceFile),
+	file_directory_name(SourceFile, PrivateDirectory),
+	directory_file_path(PrivateDirectory, '../public', PublicPath),
+	absolute_file_name(PublicPath, PublicDirectory, [file_type(directory)]),
+	http_reply_from_files(PublicDirectory, [indexes(['index.html'])], Request).
+
+% Handle the triage request.
+handle_triage(Request) :-
+	http_read_json_dict(Request, Payload),
+	(   valid_request(Payload, Category, Answers)
+	->  findall(
+		    _{id: Condition, category: ActualCategory, symptoms: Symptoms},
+		    ( in_category(Condition, ActualCategory),
+		      (Category = extended ; Category = ActualCategory),
+		      condition(Condition, Symptoms),
+		      matches_answers(Condition, Answers)
+		    ),
+		    Candidates
+		),
+		reply_json_dict(_{candidates: Candidates})
+	;   reply_json_dict(_{error: "Invalid category or symptom answers"}, [status(400)])
+	).
+
+% Validate the request payload. 
+% The payload must be a dictionary with a category and a list of answers.
+valid_request(Payload, Category, Answers) :-
+	is_dict(Payload),
+	get_dict(category, Payload, CategoryText),
+	string(CategoryText),
+	atom_string(Category, CategoryText),
+	memberchk(Category, [fever, stomach, body, extended]),
+	get_dict(answers, Payload, Items),
+	is_list(Items),
+	maplist(parse_answer(Category), Items, Answers).
+
+% Parse an individual answer item.
+parse_answer(Category, Item, answer(Symptom, Answer)) :-
+	is_dict(Item),
+	get_dict(symptom, Item, SymptomText),
+	string(SymptomText),
+	atom_string(Symptom, SymptomText),
+	get_dict(answer, Item, AnswerText),
+	string(AnswerText),
+	atom_string(Answer, AnswerText),
+	memberchk(Answer, [yes, no]),
+	(   Category = extended
+	->  has_symptom(_, Symptom)
+	;   in_category(Condition, Category),
+	    has_symptom(Condition, Symptom)
+	).
+
+% Check if a condition matches the user's answers.
+matches_answers(Condition, Answers) :-
+	forall(
+		member(answer(Symptom, Answer), Answers),
+		(Answer = yes -> has_symptom(Condition, Symptom)
+		; Answer = no -> \+ has_symptom(Condition, Symptom))
+	).
