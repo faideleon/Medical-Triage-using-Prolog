@@ -1,4 +1,6 @@
-%CATEGORIES
+%FACTS
+
+% Conditions divided into three categories: Fever, Stomach, Body
 
 % Fever- 21
 in_category(influenza, fever).
@@ -67,9 +69,7 @@ in_category(schizophrenia, body).
 in_category(alzheimers, body).
 
 
-
-
-% SYMPTOMS
+% Conditions with their corresponding symptoms
 
 condition(influenza, [fever, cough, runny_nose]).
 condition(measles, [fever, cough, runny_nose, red_eyes, rash]).
@@ -136,10 +136,22 @@ condition(depression, [low_mood, loss_of_interest, sleep_problems, hopelessness]
 condition(schizophrenia, [hallucinations, delusions, disordered_thinking, social_withdrawal]).
 condition(alzheimers, [memory_loss, confusion, language_problems, mood_changes]).
 
+% Dynamic predicate to store user answers in the form of answer(Symptom, Answer), 
+% where Symptom is the symptom being asked about and Answer is the user's response (yes or no).
 :- dynamic answer/2.
 
+
+
+% RULES
+
+% Main entry point for the diagnostic system. 
+% First, it clears any previous answers. 
+% Then, it prompts the user to choose a category of symptoms (Fever, Stomach, or Body) by typing the corresponding number. 
+% After the user makes a valid choice, it proceeds to ask about all symptoms in that category. 
+% If the user provides invalid input, it prompts them to try again.
 start :-
-	write('Choose category'),
+	retractall(answer(_, _)), %clear previous answers
+	write('Choose category, type the number only'), 
 	nl,
 	write('1. Fever'),
 	nl,
@@ -147,66 +159,60 @@ start :-
 	nl,
 	write('3. Body'),
 	nl,
-	read(Choice),
-	choice(Choice, Category),
+	read_line_to_string(user_input, Raw), %wait for user input and place it in Raw variable
+	(catch(number_string(Choice, Raw), % catch any errors that may occur when converting the input to a number	
+			_,
+			fail),
+		choice(Choice, Category) -> 
 	write('You picked: '),
-	write(Category),
-	nl.
+		write(Category), 
+		nl,
+		ask_all(Category),
+		nl;
+	write('Invalid input. Try again.'),
+		nl,
+		start).
 
+% VALIDATION: ask about a symptom and record the answer. 
+% If the answer is not yes or no, ask again.
+ask(Symptom, Category) :-
+	has_symptom(Condition, Symptom),
+	candidate(Condition, Category),
+	 \+ answer(Symptom, _),
+	format("Do you have ~w? (yes/no): ", [Symptom]),
+	read_line_to_string(user_input, Raw), 
+	string_lower(Raw, Lower), 
+	atom_string(Answer, Lower), 
+	assertz(answer(Symptom, Answer)). 
 
+% Ask about all symptoms in a category. 
+% If the user has a symptom, ask about the next symptom. 
+% If the user does not have any more symptoms, find the most likely condition based on the symptoms the user has and print it out. 
+% If no condition is found, print out a message saying that the condition is unknown and to visit a doctor immediately.
+ask_all(Category) :-
+	(ask(Symptom, Category) -> 
+	ask_all(Category); 
+	(candidate(Condition, Category)) -> 
+	format("Most likely condition is: ~w", [Condition]),
+		nl;
+	write("Condition is unknown. Please visit a doctor immediately!")).
+
+% Determine if a condition is a candidate for the given category based on the user's answers. 
+% Returns true if the condition is in the category and the user has answered yes to all of the symptoms for that condition 
+% and has not answered no to any of the symptoms for that condition. 
+% Otherwise, returns false.
 candidate(Condition, Category) :-
-	 in_category(Condition, Category),
-	(answer(Symptom, yes),
-		 \+ has_symptom(Condition, Symptom)),
-	 \+ (answer(Symptom, no),
+	 in_category(Condition, Category), 
+	 \+ (answer(Symptom, yes), 
+		 \+ has_symptom(Condition, Symptom)), 
+	 \+ (answer(Symptom, no), 
 		has_symptom(Condition, Symptom)).
-	
 
 choice(1, fever).
 choice(2, stomach).
 choice(3, body).
 
-
-
-%RULES
+% Checks if a condition has a symptom. Returns true if the symptom is in the list of symptoms for that condition otherwise returns false.
 has_symptom(Condition, Symptom) :-
 	condition(Condition, Symptoms),
 	member(Symptom, Symptoms).
-
-%all symptoms that appear in a category (no duplicates)
-category_symptoms(Category, Symptoms) :-
-	findall(S, (in_category(D, Category), has_symptom(D, S)), AllSymptoms). 
-	sort(AllSymptoms, Symptoms). 
-
-%ask about each symptom, one by one
-ask_symptoms([]).
-ask_symptoms([First | Rest]) :-
-	ask(First), 
-	ask_symptoms(Rest). 
-
-ask(S) :- 
-	format('Do you have ~w (yes. / no.): ', [Symptom]),
-	read(Reply),
-	( member(Reply, [yes, no])
-	-> 	assert(answer (Symptom, Reply))
-	; 	write('Please type yes. or no. '),
-		nl,
-		ask(Symptom)
-	). 
-
-%Count how many symptoms of a disease the user said "yes" to.
-count_matches(Disease, Count) :-
-		condition(Disease, DiseaseSymptoms), 
-		findall(S, (member(S, DiseaseSymptoms), answer(S, yes)), MatchedList),
-		length(MatchedList, Count).
-
-%user said yes to a symptom, but a disease does not have it
-missing_symptom(Disease) :-
-	answer(Symptom, yes), 
-	\+ has_symptom(Disease, Symptom).
-
-%user said not to a symptom, but the disease has it
-denied_symptom(Disease) :-
-	answer(Symptom, no),
-	has_symptom(Disease, Symptom). 
-
