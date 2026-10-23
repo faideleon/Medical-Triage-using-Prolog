@@ -5,6 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Guided Health Symptom Checker</title>
   <style>
+    /* Safety: disclaimer banner (inserted by improvements.js) */
+    .disclaimer {
+    width: calc(100% - 44px);            /* 44px = 22px page padding on each side */
+    max-width: 1396px;                   /* 1440px grid width - 44px */
+    margin: 12px auto 0;
+    padding: 10px 16px;
+    background: var(--warning-amber-light);
+    border: 2px solid var(--warning-amber);
+    color: var(--warning-amber);
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    }
+
+    /* Layout: 2x2 category grid (1 column on small screens) */
+    .category-choice-grid { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 700px) {
+    .category-choice-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Option 4 no longer looks pre-selected */
+    .category-card-btn.extended-card {
+    border: 3px dashed var(--success-green); /*dashed border for extended card instead of solid border*/
+    background: var(--success-green-light);
+    }
+
+    /* "Waiting for category..." reads as plain text, not a link */
+    #remaining-count-badge { 
+      color: var(--text-muted) !important; 
+    }
+
+    /* Sidebar: Confirm button sits under the answers instead of the page bottom */
+    aside.card { 
+      justify-content: flex-start !important; gap: 18px; 
+    }
+
+    /* Slightly calmer text sizes */
+    body { 
+      font-size: 17px; 
+    }
+    .question-prompt { 
+      font-size: 30px; 
+    }
+
+    /* Progress bar starts at 0% on step 1 (matches the "0%" label).
+    :has() works in current Chrome, Edge, Firefox and Brave. */
+    body:has(#inst-1.active) #progress-fill { 
+      width: 0% !important; 
+    }
     :root {
       --bg-page: #f1f5f9;
       --bg-card: #ffffff;
@@ -531,7 +580,10 @@
         Connecting to Prolog...
       </div>
     </div>
-
+    <!-- DISCLAIMER -->
+    <div class="disclaimer">
+      <p>For education only. This is not a medical diagnosis. In an emergency, call your local emergency number.</p>
+    </div>
     <div class="main-grid">
 
       <!-- LEFT COLUMN: TOP (CATEGORY / YES-NO PROMPT) + BOTTOM (DYNAMIC CANDIDATE VIEW) -->
@@ -690,6 +742,8 @@
 
       <div id="primary-result-container"></div>
       <div id="fallback-result-container"></div>
+      <!--Disclaimer-->
+      <p style="margin-top: 16px; font-weight: 700;">⚠ This is not a medical diagnosis. Please see a doctor.</p>
     </div>
   </section>
 
