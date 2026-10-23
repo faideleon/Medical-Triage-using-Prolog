@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Guided Health Symptom Checker</title>
-  <!-- Tau Prolog for executing the .pl logic file in the browser -->
-  <script src="https://cdn.jsdelivr.net/npm/tau-prolog@0.3.4/modules/core.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tau-prolog@0.3.4/modules/lists.js"></script>
   <style>
     :root {
       --bg-page: #f1f5f9;
@@ -521,65 +518,18 @@
       border: 2px solid var(--border);
       margin-bottom: 18px;
     }
-
-    /*ADDED IMPROVEMENTS */
-
-    .disclaimer {
-    width: calc(100% - 44px);
-    max-width: 1396px;
-    margin: 12px auto 0;
-    padding: 10px 16px;
-    background: var(--warning-amber-light);
-    border: 2px solid var(--warning-amber);
-    color: var(--warning-amber);
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 700;
-    }
-
-    .category-choice-grid { grid-template-columns: repeat(2, 1fr); }
-    @media (max-width: 700px) {
-    .category-choice-grid { grid-template-columns: 1fr; }
-    }
-
-    .category-card-btn.extended-card {
-    border: 3px dashed var(--success-green);
-    background: var(--success-green-light);
-    }
-
-    #remaining-count-badge { color: var(--text-muted) !important; }
-
-    aside.card { justify-content: flex-start !important; gap: 18px; }
-
-    body { font-size: 17px; }
-    .question-prompt { font-size: 30px; }
-
-    body:has(#inst-1.active) #progress-fill { width: 0% !important; }
-    body:has(.pl-status-pill.loaded) .pl-file-label { display: none; }
   </style>
 </head>
-
 <body>
-<!-- Tau Prolog for executing the .pl logic file in the browser 
+
   <!-- PAGE 1: GUIDED QUESTIONING WORKSPACE -->
   <main id="triage-page" class="page-view active">
 
-    <!-- PROLOG LOGIC FILE STATUS BAR -->
+    <!-- PROLOG API STATUS -->
     <div class="pl-status-bar">
       <div id="pl-status-pill" class="pl-status-pill">
-        Loading Prolog (.pl) logic...
+        Connecting to Prolog...
       </div>
-      <div>
-        <label for="pl-file-input" class="pl-file-label">
-          Load / Change .pl Logic File
-        </label>
-        <input id="pl-file-input" type="file" accept=".pl,.pro,.txt" style="display: none;" />
-      </div>
-    </div>
-
-    <!-- DISCLAIMER -->
-    <div class="disclaimer">
-      <p>For education only. This is not a medical diagnosis. In an emergency, call your local emergency number.</p>
     </div>
 
     <div class="main-grid">
@@ -679,7 +629,7 @@
               <span id="progress-percent">0%</span>
             </div>
             <div class="progress-track">
-              <div id="progress-fill" class="progress-fill" style="width: 0%;"></div>
+              <div id="progress-fill" class="progress-fill" style="width: 10%;"></div>
             </div>
           </div>
 
@@ -740,8 +690,6 @@
 
       <div id="primary-result-container"></div>
       <div id="fallback-result-container"></div>
-      <!--Disclaimer-->
-      <p style="margin-top: 16px; font-weight: 700;">⚠ This is not a medical diagnosis. Please see a doctor.</p>
     </div>
   </section>
 
