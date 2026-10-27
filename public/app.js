@@ -1,64 +1,77 @@
+/**
+ * ============================================================================
+ * 1. STANDARDIZED CLINICAL DESCRIPTIONS (WHO & NIH MEDLINEPLUS REFERENCE)
+ * Format: [Etiology/Classification] + [Clinical Presentation] + [Triage/Care]
+ * ============================================================================
+ */
+const CLINICAL_REFERENCE_SOURCE = "WHO & NIH MedlinePlus Clinical Reference";
+
 const DISEASE_DESCRIPTIONS = {
-  influenza: "Commonly known as the flu. It is a viral illness that causes fever, cough, and a runny nose. Resting at home and drinking plenty of water or warm fluids helps recovery.",
-  measles: "A contagious viral illness that causes fever, cough, red watery eyes, and a widespread skin rash. Please consult a doctor and avoid close contact with others.",
-  covid_19: "A contagious respiratory virus that commonly causes fever, cough, sore throat, and a reduced sense of smell. Rest, hydrate, and get tested if possible.",
-  acute_respiratory_infection: "An infection in the airways or lungs causing fever, cough, and fast breathing. Because fast breathing can be serious, please have a doctor check your breathing.",
-  pneumonia: "A serious lung infection where the air sacs fill with fluid, causing fever, cough with phlegm, chest pain, and trouble breathing. Prompt medical care is needed.",
-  acute_bronchitis: "Swelling and mucus buildup in the main breathing tubes of the lungs, causing a cough with phlegm, wheezing, and a sore throat.",
-  chronic_lower_respiratory_disease: "Long-term irritation of the airways (such as chronic bronchitis or asthma) causing shortness of breath, wheezing, and tightness in the chest.",
-  tuberculosis: "A serious bacterial lung infection that causes a long-lasting cough, fever, and unexplained weight loss. A doctor can provide specific antibiotic treatment.",
-  pertussis: "Also called whooping cough. It causes severe, repeated coughing spells that can make it hard to catch your breath or cause vomiting after coughing.",
-  extrapulmonary_tuberculosis: "A tuberculosis infection located outside the lungs, often causing swollen lymph glands, fever, night sweats, and weight loss.",
-  hiv: "A virus that weakens the body's immune system, which can cause ongoing fever, swollen glands, weight loss, and a skin rash. Please visit a clinic for blood testing.",
-  diphtheria: "A serious bacterial throat infection that causes fever, sore throat, swollen neck glands, and a thick grey coating in the throat. Seek immediate medical care.",
-  dengue: "A mosquito-borne viral illness that causes high fever, severe headache, pain behind the eyes, and body aches. Drink plenty of fluids and see a doctor promptly.",
-  chikungunya: "A viral illness spread by mosquitoes that causes sudden fever, strong joint pain, and a skin rash.",
-  leptospirosis: "A bacterial infection often caught from floodwater or wet soil, causing fever, headache, body aches, and pain in the calves. Antibiotic treatment from a doctor is important.",
-  malaria: "A serious illness spread by mosquitoes in tropical areas, causing repeated waves of high fever, shaking chills, and headache.",
-  typhoid_fever: "A bacterial infection from contaminated food or water that causes a lasting fever, headache, stomach pain, and loss of appetite.",
-  meningitis: "A medical emergency involving swelling around the brain and spinal cord, causing fever, severe headache, vomiting, and a stiff neck. Go to a hospital immediately.",
-  meningococcemia: "A life-threatening bloodstream infection causing fever, a stiff neck, skin rash, and dark bruising. Seek emergency hospital care right away.",
-  sepsis: "A life-threatening medical emergency where the body reacts severely to an infection, causing fever, fast heartbeat, fast breathing, and confusion. Go to an emergency room immediately.",
-  rheumatic_fever: "An inflammatory condition that can develop after an untreated throat infection, causing fever, painful swollen joints, and chest pain.",
-  diarrhea: "Frequent loose or watery bowel movements with stomach cramps and vomiting. Sip clean water or oral rehydration salts frequently to prevent dehydration.",
-  cholera: "A severe watery diarrhea illness that quickly drains the body of fluids, causing vomiting, dry skin, and sunken eyes. Immediate rehydration at a clinic is critical.",
-  dysentery: "An intestinal infection that causes diarrhea with visible blood, stomach cramps, and fever. Please see a doctor for proper medication and hydration.",
-  schistosomiasis: "A parasitic infection caught from freshwater exposure, causing stomach pain, diarrhea with blood, and itchy skin.",
-  appendicitis: "Sudden inflammation of the appendix causing stomach pain, nausea, loss of appetite, and fever. Please visit a hospital promptly to check if surgery is needed.",
-  acute_pancreatitis: "Sudden swelling of the pancreas causing strong stomach pain that spreads to the back, along with nausea and vomiting. Hospital care is recommended.",
-  gastric_ulcer: "An open sore in the lining of the stomach that causes burning stomach pain, heartburn, bloating, and nausea.",
-  cirrhosis: "Long-term scarring of the liver that can cause yellowing of the skin and eyes (jaundice), a swollen belly, easy bruising, and itchy skin.",
-  hepatitis_a: "A liver infection spread through contaminated food or water, causing fever, loss of appetite, dark-colored urine, and yellow skin or eyes.",
-  hepatitis_b: "A viral liver infection that causes nausea, dark urine, pale-colored stools, and yellowing of the skin or eyes.",
-  hepatitis_c: "A viral infection of the liver causing stomach pain, nausea, dark urine, pale stools, and yellowing of the skin or eyes.",
-  urinary_tract_infection: "An infection in the bladder or urinary tract causing burning or pain when urinating, frequent urination, cloudy urine, and lower belly discomfort.",
-  kidney_infection: "A serious urinary infection that has reached the kidneys, causing fever, back or side pain, nausea, and painful urination. Please see a doctor for antibiotics.",
-  chronic_kidney_disease: "Gradual loss of kidney function over time, which can cause swelling in the ankles, nausea, and blood in the urine.",
-  glomerulonephritis: "Inflammation of the tiny filters inside the kidneys, causing puffiness in the face, swollen ankles, and blood in the urine.",
-  cellulitis: "A bacterial skin infection that causes an area of red, swollen, painful skin along with a fever. A doctor can prescribe antibiotics to clear it.",
-  dermatitis: "Skin irritation or eczema that causes red, dry, cracked, and itchy skin.",
-  chickenpox: "A contagious viral illness that causes fever and an itchy rash of small fluid-filled blisters across the body.",
-  mpox: "A viral illness that causes fever, swollen glands, and a rash with blisters.",
-  hand_foot_mouth_disease: "A viral infection that causes fever, painful sores inside the mouth, and a rash or blisters on the hands and feet.",
-  leprosy: "A slow-growing bacterial infection affecting the skin and nerves, causing pale skin patches, numbness, and muscle weakness. It is curable with medical treatment.",
-  sore_eyes: "Also known as pink eye or conjunctivitis. It causes red, itchy, and watery eyes. Avoid rubbing your eyes and wash your hands frequently.",
-  ischemic_heart_disease: "Reduced blood flow to the heart muscle causing chest pain or pressure, shortness of breath, sweating, and nausea. Seek emergency medical attention immediately.",
-  stroke: "A medical emergency where blood flow to part of the brain stops, causing facial drooping, arm weakness, and trouble speaking. Call emergency services immediately.",
-  hypertension: "High blood pressure. When very high, it can cause headache, dizziness, and blurry vision. Have your blood pressure checked with a cuff.",
-  diabetes: "A condition where blood sugar levels are too high, often causing constant thirst, frequent urination, and blurry vision.",
-  heart_failure: "A condition where the heart pumps less effectively, leading to shortness of breath, swollen ankles, and a fluttering or racing heartbeat.",
-  atherosclerosis: "Narrowing of the arteries from plaque buildup, which can cause chest pain, leg pain when walking, and numbness.",
-  deep_vein_thrombosis: "A blood clot in a deep vein, usually in the leg, causing leg pain, swelling, redness, and warm skin in that area. See a doctor promptly.",
-  anemia: "A low level of healthy red blood cells to carry oxygen, causing pale skin, dizziness, and a fast or noticeable heartbeat.",
-  cancer: "Abnormal cell growth in the body that can cause unexplained weight loss, loss of appetite, and a painless lump. Please see a doctor for an evaluation.",
-  malnutrition: "A lack of enough nutrients or calories in the diet, leading to weight loss, low body weight, and weak muscles.",
-  epilepsy: "A brain condition that causes repeated seizures, sudden muscle jerking, and brief loss of awareness.",
-  tetanus: "A serious bacterial nerve condition from a wound, causing stiff muscles, painful spasms, stiffness in the jaw (lockjaw), and trouble swallowing. Seek emergency care.",
-  rabies: "A life-threatening viral infection from an animal bite or scratch, causing fever, numbness, muscle spasms, and difficulty swallowing water. Seek emergency care immediately.",
-  arthritis: "Swelling and tenderness in one or more joints, causing joint pain, swelling, and stiffness—especially first thing in the morning.",
-  depression: "A mood condition that causes a persistent feeling of sadness, loss of interest in daily activities, trouble sleeping, and feelings of hopelessness.",
-  schizophrenia: "A serious mental health condition that affects how a person thinks and perceives reality, causing hallucinations, strong false beliefs, and withdrawal from others.",
-  alzheimers: "A brain condition that slowly affects memory, causing forgetfulness, confusion about time or place, trouble finding words, and mood changes."
+  // FEVER, RESPIRATORY & SYSTEMIC INFECTIONS
+  influenza: "An acute viral respiratory infection caused by influenza viruses. It presents with sudden fever, dry cough, nasal congestion, headache, and myalgia. Manage mild cases with rest, oral hydration, and antipyretics; seek medical care if shortness of breath develops.",
+  measles: "A highly contagious viral illness caused by the paramyxovirus family. It is characterized by high fever, cough, conjunctivitis (red watery eyes), and a generalized maculopapular rash. Isolate immediately to prevent transmission and consult a physician for supportive care.",
+  covid_19: "An infectious respiratory illness caused by the SARS-CoV-2 coronavirus. Common symptoms include fever, dry cough, sore throat, fatigue, and loss of taste or smell. Isolate, maintain hydration, perform antigen/PCR testing, and seek urgent care if breathing difficulty occurs.",
+  acute_respiratory_infection: "An acute infection of the upper or lower respiratory tract obstructing normal airflow. It presents with fever, persistent cough, and tachypnea (rapid breathing). Prompt clinical auscultation and evaluation are required to rule out lower airway involvement.",
+  pneumonia: "An acute respiratory infection affecting the pulmonary alveoli, which fill with pus and fluid. It causes fever, productive cough with phlegm, pleuritic chest pain, and labored breathing. Prompt medical evaluation is required for targeted antimicrobial therapy.",
+  acute_bronchitis: "Transient inflammation of the large conducting airways (bronchi), typically following a viral upper respiratory infection. It manifests with a persistent phlegm-producing cough, wheezing, and throat irritation. Supportive care with hydration and rest is standard unless symptoms persist.",
+  chronic_lower_respiratory_disease: "Progressive airway obstruction encompassing chronic bronchitis, emphysema (COPD), and chronic asthma. It presents with exertional dyspnea (shortness of breath), wheezing, and chest tightness. Ongoing medical management with bronchodilators or inhaled corticosteroids is advised.",
+  tuberculosis: "A chronic bacterial infection caused by Mycobacterium tuberculosis that primarily affects lung tissue. Classic symptoms include a cough lasting more than two weeks, fever, night sweats, and unintentional weight loss. Diagnostic sputum testing and a multi-drug antibiotic regimen are required.",
+  pertussis: "A highly contagious bacterial respiratory infection caused by Bordetella pertussis (whooping cough). It causes paroxysmal coughing fits followed by a high-pitched inspiratory whoop and post-tussive vomiting. Early macrolide antibiotic therapy and medical monitoring are essential.",
+  extrapulmonary_tuberculosis: "Tuberculosis infection occurring in organ systems outside the pulmonary parenchyma, such as the lymph nodes, pleura, or bones. It commonly presents with localized lymphadenopathy (swollen glands), fever, drenching night sweats, and weight loss. Specialist infectious disease evaluation is required.",
+  hiv: "A retroviral infection caused by the Human Immunodeficiency Virus that progressively depletes CD4+ T lymphocytes. Acute or advancing stages present with persistent fever, generalized lymphadenopathy, weight loss, and rash. Confidential serological testing and antiretroviral therapy (ART) are essential.",
+  diphtheria: "An acute, toxin-mediated bacterial infection caused by Corynebacterium diphtheriae affecting the nasopharynx. It produces fever, sore throat, cervical lymphadenopathy, and an adherent gray pseudomembrane. Immediate hospital admission for diphtheria antitoxin and antibiotics is critical.",
+  dengue: "A mosquito-borne flavivirus infection transmitted by Aedes mosquitoes. It presents with sudden high-grade fever, severe retro-orbital headache, myalgia, arthralgia, and rash. Maintain strict oral hydration, avoid NSAIDs (such as ibuprofen or aspirin), and seek clinical platelet monitoring.",
+  chikungunya: "An alphavirus infection transmitted by Aedes mosquitoes. It is characterized by abrupt onset of fever accompanied by severe, debilitating polyarthralgia (joint pain) and maculopapular rash. Consult a clinician for symptom management and hydration guidance.",
+  leptospirosis: "A zoonotic bacterial infection caused by Leptospira species, typically acquired through skin contact with water or soil contaminated by animal urine. It causes fever, headache, myalgia, and characteristic calf tenderness. Prompt clinical evaluation for doxycycline or penicillin therapy is vital.",
+  malaria: "A life-threatening protozoan parasitic disease transmitted by Anopheles mosquitoes. It presents with cyclical paroxysms of high fever, rigors (shaking chills), diaphoresis, and headache. Immediate blood smear or rapid diagnostic testing and artemisinin-based therapy are required.",
+  typhoid_fever: "A systemic bacterial infection caused by Salmonella enterica serotype Typhi via contaminated food or water. It causes prolonged stepwise fever, frontal headache, abdominal pain, and anorexia. Medical evaluation and targeted antibiotic therapy are necessary to prevent complications.",
+  meningitis: "A critical inflammation of the leptomeninges surrounding the brain and spinal cord, caused by bacterial or viral pathogens. It presents with the classic triad of high fever, severe headache, and nuchal rigidity (stiff neck) alongside vomiting. Seek emergency hospital care immediately.",
+  meningococcemia: "A fulminant bloodstream infection caused by Neisseria meningitidis. It manifests with acute fever, neck stiffness, petechial or purpuric rash, and rapid hemodynamic instability. Immediate emergency department intervention and intravenous antibiotics are life-saving.",
+  sepsis: "A life-threatening organ dysfunction caused by a dysregulated host response to infection. Warning signs include fever or hypothermia, tachycardia, tachypnea, and altered mental status. Activate emergency medical services immediately for intensive hospital resuscitation.",
+  rheumatic_fever: "An autoimmune inflammatory multisystem disease occurring as a delayed sequela of untreated Group A streptococcal pharyngitis. It causes fever, migratory polyarthritis (painful swollen joints), and carditis (chest pain). Prompt clinical evaluation is needed to prevent rheumatic heart disease.",
+
+  // GASTROINTESTINAL, HEPATIC, RENAL & DERMATOLOGICAL
+  diarrhea: "Acute gastroenteritis characterized by three or more loose or liquid stools per day, often accompanied by abdominal cramping and emesis. Primary treatment centers on oral rehydration salts (ORS) and zinc supplementation; seek care if signs of dehydration appear.",
+  cholera: "An acute secretory diarrheal infection caused by ingestion of Vibrio cholerae bacteria. It produces profuse watery diarrhea, vomiting, loss of skin turgor, and sunken eyes, leading to rapid hypovolemic shock. Immediate clinical rehydration with ORS or intravenous fluids is critical.",
+  dysentery: "An invasive inflammatory disorder of the lower intestinal tract, commonly caused by Shigella or Entamoeba histolytica. It presents with mucoid, bloody diarrhea, tenesmus, abdominal cramps, and fever. Medical assessment is required for antimicrobial therapy and hydration.",
+  schistosomiasis: "A parasitic trematode infection acquired through cutaneous contact with cercariae-infested freshwater. It causes abdominal pain, bloody diarrhea or hematuria, and pruritic skin reactions. Clinical stool/urine examination and praziquantel therapy are recommended.",
+  appendicitis: "Acute inflammation and obstruction of the vermiform appendix. It typically presents with periumbilical pain migrating to the right lower quadrant, nausea, anorexia, and low-grade fever. Urgent surgical evaluation is required to prevent perforation and peritonitis.",
+  acute_pancreatitis: "Sudden non-bacterial inflammation of the pancreas triggered by gallstones or alcohol use. It causes severe epigastric pain radiating to the back, persistent nausea, and vomiting. Hospital admission is required for intravenous fluid resuscitation and bowel rest.",
+  gastric_ulcer: "A mucosal defect penetrating the muscularis mucosae of the stomach wall, commonly linked to H. pylori infection or NSAID use. It causes burning epigastric pain, dyspepsia, bloating, and nausea. Consult a physician for acid-suppression therapy and H. pylori eradication.",
+  cirrhosis: "End-stage diffuse hepatic fibrosis with nodular regeneration resulting from chronic liver injury. Decompensated disease presents with jaundice, ascites (abdominal swelling), coagulopathy (easy bruising), and pruritus. Comprehensive hepatology care is required.",
+  hepatitis_a: "An acute, self-limiting viral liver infection transmitted via the fecal-oral route through contaminated food or water. Symptoms include fever, malaise, anorexia, dark urine, and icterus (jaundice). Supportive rest, hydration, and avoidance of hepatotoxic medications are advised.",
+  hepatitis_b: "A potentially chronic DNA viral infection of the liver transmitted through blood or bodily fluids. Acute flares present with nausea, dark urine, acholic (pale) stools, and jaundice. Serological testing and antiviral evaluation by a physician are recommended.",
+  hepatitis_c: "A blood-borne RNA viral infection causing chronic hepatic inflammation. When symptomatic, it presents with right upper quadrant discomfort, nausea, dark urine, pale stools, and jaundice. Confirmatory RNA testing and direct-acting antiviral (DAA) therapy can cure the infection.",
+  urinary_tract_infection: "Bacterial colonization and inflammation of the urinary system, predominantly affecting the bladder (cystitis). It causes dysuria (burning urination), urinary frequency, cloudy urine, and suprapubic discomfort. Outpatient clinical evaluation for targeted oral antibiotics is advised.",
+  kidney_infection: "Acute pyelonephritis resulting from an ascending urinary tract infection reaching the renal parenchyma. It presents with high fever, unilateral or bilateral flank pain, nausea, and dysuria. Prompt medical care for systemic antibiotics is necessary to prevent renal scarring.",
+  chronic_kidney_disease: "Progressive, irreversible structural or functional decline of the kidneys lasting more than three months. Advanced stages manifest with peripheral edema (swollen ankles), uremic nausea, and hematuria. Nephrology evaluation for blood pressure and renal function management is essential.",
+  glomerulonephritis: "Immune-mediated inflammation of the renal glomeruli impairing blood filtration. It characteristically presents with periorbital puffiness, dependent ankle edema, and hematuria (tea-colored or bloody urine). Prompt medical evaluation of renal function and blood pressure is required.",
+  cellulitis: "An acute spreading bacterial infection of the dermis and subcutaneous tissues, typically caused by Streptococcus or Staphylococcus species. It produces localized erythema, warmth, edema, tenderness, and fever. Prescription antibiotic therapy from a clinician is required.",
+  dermatitis: "Inflammatory superficial skin reactivity encompassing atopic eczema and contact dermatitis. It presents with erythema, xerosis (dryness), scaling, fissuring, and pruritus. Manage with fragrance-free emollients, trigger avoidance, and topical anti-inflammatory care.",
+  chickenpox: "A highly contagious primary infection caused by the varicella-zoster virus. It produces fever, malaise, and a generalized pruritic rash that progresses rapidly from macules to vesicles and crusts. Isolate until all lesions have crusted and use supportive antipruritic care.",
+  mpox: "A zoonotic orthopoxvirus infection transmitted through close physical contact. It presents with prodromal fever, prominent lymphadenopathy, myalgia, and a centrifugal vesiculopustular rash. Isolate and contact a healthcare provider for diagnostic testing and supportive care.",
+  hand_foot_mouth_disease: "A common contagious enteroviral syndrome predominantly caused by Coxsackievirus A16 or Enterovirus 71. It causes low-grade fever, painful oral enanthem (mouth ulcers), and a maculopapular or vesicular rash on the palms and soles. Maintain hydration and monitor closely.",
+  leprosy: "A chronic granulomatous infection caused by Mycobacterium leprae affecting peripheral nerves and skin. It presents with hypopigmented or erythematous anesthetic skin patches, peripheral neuropathy, and muscle weakness. It is completely curable with WHO multidrug therapy (MDT).",
+  sore_eyes: "Acute infectious or allergic conjunctivitis involving inflammation of the palpebral and bulbar conjunctiva. It causes conjunctival hyperemia (redness), pruritus, grittiness, and tearing. Practice strict hand hygiene, avoid sharing towels, and seek ophthalmic drops if purulent.",
+
+  // CARDIOVASCULAR, METABOLIC, NEUROLOGICAL & PSYCHIATRIC
+  ischemic_heart_disease: "Myocardial oxygen supply-demand mismatch typically caused by coronary artery atherosclerosis. Acute coronary syndrome presents with substernal chest pressure, dyspnea, diaphoresis, and nausea. Seek emergency medical services immediately.",
+  stroke: "An acute focal neurological deficit resulting from cerebral infarction or hemorrhage. Warning signs include sudden facial droop, unilateral arm weakness, and dysarthria or aphasia (speech difficulty). Call emergency services immediately—time-critical reperfusion saves brain tissue.",
+  hypertension: "Persistently elevated systemic arterial blood pressure (≥140/90 mmHg). Often asymptomatic, severe elevations can produce occipital headache, dizziness, and visual disturbances. Regular sphygmomanometer monitoring, dietary sodium reduction, and antihypertensive therapy are advised.",
+  diabetes: "A chronic metabolic disorder characterized by persistent hyperglycemia due to impaired insulin secretion, insulin action, or both. Classic symptoms include polydipsia (excessive thirst), polyuria (frequent urination), and blurred vision. Clinical HbA1c/glucose testing and glycemic management are required.",
+  heart_failure: "A clinical syndrome in which impaired ventricular filling or ejection prevents the heart from meeting systemic metabolic demands. It presents with dyspnea, orthopnea, dependent ankle edema, and palpitations. Cardiology evaluation and guideline-directed medical therapy are essential.",
+  atherosclerosis: "Chronic arterial wall thickening and lumen narrowing driven by lipid-rich plaque accumulation. It manifests clinically with angina pectoris (chest pain), intermittent claudication (exertional leg pain), and paresthesia. Cardiovascular risk modification and lipid-lowering therapy are indicated.",
+  deep_vein_thrombosis: "Formation of a fibrin-rich thrombus within a deep venous conduit, most commonly in the lower extremities. It causes unilateral calf or thigh pain, pitting edema, erythema, and localized warmth. Urgent Doppler ultrasound and anticoagulation are needed to prevent pulmonary embolism.",
+  anemia: "A hematologic reduction in circulating hemoglobin concentration or red blood cell mass, impairing tissue oxygen delivery. It causes mucocutaneous pallor, fatigue, orthostatic dizziness, and compensatory tachycardia. Complete blood count (CBC) evaluation is recommended to identify the underlying cause.",
+  cancer: "Uncontrolled clonal proliferation of abnormal cells capable of local tissue invasion and distant metastasis. Constitutional signs include unexplained weight loss, persistent anorexia, and a firm, painless mass. Prompt oncological diagnostic workup and biopsy evaluation are critical.",
+  malnutrition: "Cellular imbalance between nutrient/energy intake and physiological requirements for maintenance and growth. Protein-energy undernutrition presents with significant weight loss, low body mass index, and skeletal muscle wasting. Structured nutritional rehabilitation under clinical guidance is advised.",
+  epilepsy: "A chronic neurological disorder characterized by an enduring predisposition to generate unprovoked epileptic seizures. Episodes involve paroxysmal electrical discharges causing tonic-clonic muscle jerking and transient loss of consciousness. Neurological evaluation and antiepileptic medication are required.",
+  tetanus: "An acute, toxin-mediated neurological disease caused by Clostridium tetani spores entering devitalized wounds. Tetanospasmin causes generalized rigidity, painful reflex spasms, trismus (lockjaw), and dysphagia. Immediate emergency hospitalization for immunoglobulin and airway support is mandatory.",
+  rabies: "A virtually fatal zoonotic viral encephalomyelitis transmitted via the saliva of infected mammals through bites or scratches. Clinical onset features fever, wound paresthesia, pharyngeal spasms, and hydrophobia. Immediate post-exposure prophylaxis (vaccine and immunoglobulin) after any bite is life-saving.",
+  arthritis: "Acute or chronic intra-articular inflammation involving synovial proliferation or cartilage degeneration. It presents with localized arthralgia, joint effusion (swelling), and prolonged morning stiffness. Rheumatology or primary care assessment for anti-inflammatory and physical therapy is advised.",
+  depression: "A common mood disorder involving persistent neurobiological and affective dysregulation lasting at least two weeks. Core symptoms include depressed mood, anhedonia (loss of interest), insomnia or hypersomnia, and feelings of hopelessness. Evidence-based psychotherapy and pharmacotherapy are highly effective.",
+  schizophrenia: "A chronic, severe neuropsychiatric syndrome affecting perception, cognition, and affect. It presents with positive symptoms such as auditory hallucinations and fixed delusions alongside social withdrawal. Comprehensive psychiatric care and antipsychotic therapy are essential.",
+  alzheimers: "A progressive neurodegenerative disorder characterized by cortical atrophy, beta-amyloid plaques, and neurofibrillary tangles. It causes insidious episodic memory loss, temporal/spatial disorientation, anomia (word-finding difficulty), and behavioral changes. Neurological assessment and supportive care planning are recommended."
 };
 
 function formatName(str) {
@@ -68,21 +81,31 @@ function formatName(str) {
   return str.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
+/**
+ * ============================================================================
+ * 2. PROLOG BRIDGE & QUERY FILTER
+ * ============================================================================
+ */
 const prologBridge = {
   isLoaded: false
 };
 
+let prologKnowledgeBase = [];
+
 async function queryPrologCandidates(category, answers) {
-  const response = await fetch("/api/triage", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ category, answers })
+  if (prologKnowledgeBase.length === 0) return [];
+
+  return prologKnowledgeBase.filter(disease => {
+    if (category !== "extended" && disease.category !== category) return false;
+
+    for (const { symptom, answer } of answers) {
+      const hasSymptom = disease.symptoms.includes(symptom);
+      if (answer === "yes" && !hasSymptom) return false;
+      if (answer === "no" && hasSymptom) return false;
+    }
+
+    return true;
   });
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.error || "Prolog API request failed.");
-  }
-  return result.candidates;
 }
 
 async function queryAllPrologConditions(category) {
@@ -91,7 +114,7 @@ async function queryAllPrologConditions(category) {
 
 /**
  * ============================================================================
- * 3. ENGINE STATE & CONTINUED-QUESTIONING SCRIPT CHECK
+ * 3. ENGINE STATE & CONTINUED-QUESTIONING LOGIC
  * ============================================================================
  */
 const state = {
@@ -114,16 +137,15 @@ async function startCategorySession(category) {
   state.isContinuingAfterMatch = false;
   state.isFinished = false;
 
-  // Preserve the exact .pl order (no sorting in JS)
   state.initialPool = await queryAllPrologConditions(category);
   await recomputeEngineState();
 
   document.getElementById("category-step-view").style.display = "none";
-  document.getElementById("question-step-view").style.display = "block";
+  document.getElementById("question-step-view").style.display = "flex";
 
   const badgeLabel = category === "extended"
-    ? `Mode: Extended Questioning (All ${state.initialPool.length} Conditions)`
-    : `You picked: ${formatName(category)} Category`;
+    ? `Extended Mode • ${state.initialPool.length} Conditions`
+    : `${formatName(category)} Category`;
   document.getElementById("active-category-badge").textContent = badgeLabel;
 
   renderWorkspace();
@@ -133,7 +155,6 @@ async function recomputeEngineState() {
   const yesSet = new Set(state.answers.filter(a => a.answer === "yes").map(a => a.symptom));
   const noSet = new Set(state.answers.filter(a => a.answer === "no").map(a => a.symptom));
 
-  // 1. Query Prolog candidate/2 for remaining viable conditions
   state.candidates = await queryPrologCandidates(state.category, state.answers);
 
   if (state.candidates.length === 0) {
@@ -144,17 +165,14 @@ async function recomputeEngineState() {
     return;
   }
 
-  // 2. Check if one or more candidates already have all of their symptoms confirmed "yes"
   const matchedCandidates = state.candidates.filter(disease =>
     disease.symptoms.every(sym => yesSet.has(sym))
   );
 
-  // If multiple candidates are completely matched, pick the most specific one
   const exactMatch = matchedCandidates.length > 0
     ? [...matchedCandidates].sort((a, b) => b.symptoms.length - a.symptoms.length)[0]
     : null;
 
-  // 3. Find the next unasked symptom across remaining viable candidates in .pl order
   let nextSym = null;
   for (const candidate of state.candidates) {
     const unasked = candidate.symptoms.find(sym => !yesSet.has(sym) && !noSet.has(sym));
@@ -164,9 +182,6 @@ async function recomputeEngineState() {
     }
   }
 
-  // 4. SCRIPT CHECK:
-  // Keep asking despite an existing match if any other viable candidate still has
-  // unasked symptoms (e.g., continuing past influenza to test for measles).
   if (nextSym) {
     state.matchedDisease = exactMatch;
     state.currentSymptom = nextSym;
@@ -175,7 +190,6 @@ async function recomputeEngineState() {
     return;
   }
 
-  // All unasked symptoms across all remaining candidates have been exhausted
   state.matchedDisease = exactMatch;
   state.currentSymptom = null;
   state.isContinuingAfterMatch = false;
@@ -207,7 +221,7 @@ async function undoLastAnswer() {
 
 /**
  * ============================================================================
- * 4. UI RENDERING
+ * 4. GOOGLE MATERIAL 3 UI RENDERING
  * ============================================================================
  */
 function updatePrologStatusUI(loaded, message) {
@@ -233,7 +247,7 @@ function updateProgressSidebar() {
   inst3.classList.remove("active");
 
   if (!state.category) {
-    statusText.textContent = "Step 1: Pick Category";
+    statusText.textContent = "Step 1 • Select Category";
     percentText.textContent = "0%";
     fillBar.style.width = "10%";
     inst1.classList.add("active");
@@ -241,7 +255,7 @@ function updateProgressSidebar() {
   }
 
   if (state.isFinished) {
-    statusText.textContent = "Step 3: Ready to Confirm";
+    statusText.textContent = "Step 3 • Ready to Review";
     percentText.textContent = "100%";
     fillBar.style.width = "100%";
     inst3.classList.add("active");
@@ -252,7 +266,7 @@ function updateProgressSidebar() {
   const totalPool = state.initialPool.length || 1;
   const eliminated = totalPool - state.candidates.length;
   const pct = Math.min(95, Math.max(15, Math.round((eliminated / totalPool) * 85) + 10));
-  statusText.textContent = "Step 2: Answering Questions";
+  statusText.textContent = "Step 2 • Symptom Check";
   percentText.textContent = `${pct}%`;
   fillBar.style.width = `${pct}%`;
 }
@@ -271,7 +285,7 @@ function renderWorkspace() {
       .map(d => formatName(d.id))
       .join(", ");
     continuingBanner.style.display = "block";
-    continuingBanner.textContent = `Preliminary Match: ${formatName(state.matchedDisease.id)} — Continuing questions to check for similar conditions with additional symptoms (${otherCandidates}).`;
+    continuingBanner.textContent = `Preliminary match: ${formatName(state.matchedDisease.id)} • Checking closely related conditions (${otherCandidates})`;
   } else {
     continuingBanner.style.display = "none";
     continuingBanner.textContent = "";
@@ -279,41 +293,50 @@ function renderWorkspace() {
 
   if (!state.isFinished && state.currentSymptom) {
     const readableSymptom = formatName(state.currentSymptom).toLowerCase();
-    questionText.textContent = `Do you have ${readableSymptom}?`;
+    questionText.textContent = `Are you experiencing ${readableSymptom}?`;
     yesNoControls.style.display = "grid";
     completeBanner.style.display = "none";
   } else {
     yesNoControls.style.display = "none";
     completeBanner.style.display = "block";
     if (state.matchedDisease) {
-      questionText.textContent = `Match Found: ${formatName(state.matchedDisease.id)}`;
+      questionText.textContent = `Primary Match Identified: ${formatName(state.matchedDisease.id)}`;
     } else {
-      questionText.textContent = `No exact match found.`;
+      questionText.textContent = `Symptom Check Complete`;
     }
   }
 
   document.getElementById("btn-undo").disabled = state.answers.length === 0;
 
+  // CANDIDATES BOARD (MATERIAL 3 EMPTY STATES & CHIPS)
   const board = document.getElementById("candidates-board");
   const badge = document.getElementById("remaining-count-badge");
 
   if (!state.category) {
-    badge.textContent = prologBridge.isLoaded
-      ? "Waiting for category..."
-      : "Load your .pl file above to start";
-    board.innerHTML = `<div style="font-size: 19px; color: var(--text-muted); padding: 12px;">${
-      prologBridge.isLoaded
-        ? "Pick a category above to start."
-        : "Click 'Load / Change .pl Logic File' in the top bar to load your Prolog file."
-    }</div>`;
+    badge.textContent = prologBridge.isLoaded ? "Awaiting Selection" : "Knowledge Base Offline";
+    board.innerHTML = `
+      <div class="m3-empty-state">
+        <div class="m3-empty-title">
+          ${prologBridge.isLoaded ? "Select a symptom category above" : "Knowledge base file required"}
+        </div>
+        <div class="m3-empty-subtitle">
+          ${prologBridge.isLoaded
+            ? "Candidate conditions from the clinical knowledge base will filter here in real time."
+            : "Use 'Load .pl File' in the top bar to select conditions.pl and initialize the engine."}
+        </div>
+      </div>
+    `;
   } else {
-    badge.textContent = `${state.candidates.length} of ${state.initialPool.length} Conditions Possible`;
+    badge.textContent = `${state.candidates.length} of ${state.initialPool.length} Active`;
     board.innerHTML = "";
 
     if (state.candidates.length === 0) {
       board.innerHTML = `
-        <div style="grid-column: 1 / -1; background: var(--danger-red-light); border: 2px solid var(--danger-red); border-radius: 12px; padding: 18px; font-weight: 700; color: var(--danger-red);">
-          No conditions match this combination. You can undo your last answer or proceed to view advice.
+        <div class="m3-empty-state m3-empty-warning">
+          <div class="m3-empty-title">No exact condition matches all selected responses</div>
+          <div class="m3-empty-subtitle">
+            Undo your last response to revise, or continue to view the closest partial clinical matches.
+          </div>
         </div>
       `;
     } else {
@@ -327,8 +350,7 @@ function renderWorkspace() {
         node.innerHTML = `
           <div class="candidate-node-title">${formatName(disease.id)}</div>
           <div class="candidate-node-meta">
-            Confirmed: ${matchedCount} of ${disease.symptoms.length}
-            ${isFullMatch ? " • ✓ MATCHED" : ""}
+            ${matchedCount}/${disease.symptoms.length} symptoms${isFullMatch ? " • ✓ Match" : ""}
           </div>
         `;
         board.appendChild(node);
@@ -336,11 +358,17 @@ function renderWorkspace() {
     }
   }
 
+  // ANSWER LOG (MATERIAL 3 TONAL PLACEHOLDER OR CHIPS)
   document.getElementById("answers-count").textContent = state.answers.length;
   const historyList = document.getElementById("answer-history-list");
 
   if (state.answers.length === 0) {
-    historyList.innerHTML = `<div style="color: var(--text-muted); font-size: 18px;">No questions answered yet.</div>`;
+    historyList.innerHTML = `
+      <div class="m3-empty-state m3-empty-compact">
+        <div class="m3-empty-title">No responses recorded</div>
+        <div class="m3-empty-subtitle">Your YES and NO symptom chips will appear here as you progress.</div>
+      </div>
+    `;
   } else {
     historyList.innerHTML = "";
     state.answers.forEach(item => {
@@ -362,7 +390,7 @@ function renderWorkspace() {
 
 /**
  * ============================================================================
- * 5. CONFIRMATION & RESULTS
+ * 5. CONFIRMATION MODAL & CLINICAL RESULTS VIEW
  * ============================================================================
  */
 const confirmModal = document.getElementById("confirm-modal");
@@ -372,21 +400,33 @@ function openConfirmationModal() {
   const yesAnswers = state.answers.filter(a => a.answer === "yes");
   const noAnswers = state.answers.filter(a => a.answer === "no");
 
-  let html = `<div style="margin-bottom: 14px;">
-    <strong style="color: var(--success-green); font-size: 20px;">✓ Present Symptoms (Answered YES):</strong>
-    <div style="margin-top: 6px; font-size: 20px; font-weight: 700;">
-      ${yesAnswers.length > 0 ? yesAnswers.map(a => formatName(a.symptom)).join(", ") : "None selected"}
-    </div>
-  </div>`;
+  const renderChips = (items, badgeClass, label) => {
+    if (items.length === 0) {
+      return `<span class="m3-empty-subtitle">None reported</span>`;
+    }
+    return items.map(a => `
+      <span class="answer-pill">
+        <span>${formatName(a.symptom)}</span>
+        <span class="${badgeClass}">${label}</span>
+      </span>
+    `).join("");
+  };
 
-  html += `<div>
-    <strong style="color: var(--danger-red); font-size: 18px;">✕ Absent Symptoms (Answered NO):</strong>
-    <div style="margin-top: 6px; font-size: 18px; color: var(--text-muted);">
-      ${noAnswers.length > 0 ? noAnswers.map(a => formatName(a.symptom)).join(", ") : "None"}
+  reviewBox.innerHTML = `
+    <div class="modal-review-group">
+      <div class="modal-group-label positive">Confirmed Present (${yesAnswers.length})</div>
+      <div class="modal-chip-row">
+        ${renderChips(yesAnswers, "answer-badge-yes", "YES")}
+      </div>
     </div>
-  </div>`;
+    <div class="modal-review-group">
+      <div class="modal-group-label negative">Reported Absent (${noAnswers.length})</div>
+      <div class="modal-chip-row">
+        ${renderChips(noAnswers, "answer-badge-no", "NO")}
+      </div>
+    </div>
+  `;
 
-  reviewBox.innerHTML = html;
   confirmModal.classList.add("active");
 }
 
@@ -400,34 +440,37 @@ async function renderResultsPage() {
 
   if (state.matchedDisease) {
     const d = state.matchedDisease;
-    const desc = DISEASE_DESCRIPTIONS[d.id] || "Please consult a healthcare professional for further evaluation.";
+    const desc = DISEASE_DESCRIPTIONS[d.id] || "Consult a qualified healthcare professional for a comprehensive clinical evaluation.";
     primaryContainer.innerHTML = `
       <div class="result-card">
-        <div style="font-size: 18px; font-weight: 700; color: var(--success-green); text-transform: uppercase;">
-          Most Likely Condition (${formatName(d.category)} Category)
+        <div class="result-meta-row">
+          <span class="result-category-pill">Primary Match • ${formatName(d.category)} Category</span>
+          <span class="result-source-pill">${CLINICAL_REFERENCE_SOURCE}</span>
         </div>
         <h1 class="result-title">${formatName(d.id)}</h1>
         <div class="result-desc">${desc}</div>
-        <div style="font-size: 19px; font-weight: 700; color: var(--success-green);">
-          ✓ Confirmed Symptoms: ${d.symptoms.map(formatName).join(", ")}
+        <div class="result-symptoms-block">
+          <span class="result-symptoms-label">Matched Clinical Criteria</span>
+          <div class="modal-chip-row">
+            ${d.symptoms.map(s => `<span class="answer-pill"><span class="answer-badge-yes">✓</span><span>${formatName(s)}</span></span>`).join("")}
+          </div>
         </div>
       </div>
     `;
   } else {
     primaryContainer.innerHTML = `
       <div class="result-card unknown-card">
-        <div style="font-size: 19px; font-weight: 800; color: var(--danger-red); text-transform: uppercase;">
-          Notice
+        <div class="result-meta-row">
+          <span class="result-category-pill danger">Inconclusive Pattern</span>
+          <span class="result-source-pill">${CLINICAL_REFERENCE_SOURCE}</span>
         </div>
-        <h1 class="result-title" style="color: var(--danger-red);">
-          Condition is unknown. Please visit a doctor immediately!
-        </h1>
-        <p style="font-size: 21px; color: var(--text-main); margin-bottom: 18px;">
-          Your answers did not match all required symptoms of a single condition.
-        </p>
+        <h1 class="result-title">No Single Exact Match Found</h1>
+        <div class="result-desc">
+          Your reported symptom combination did not satisfy all criteria for a single condition in this category. Please consult a physician for an in-person clinical assessment.
+        </div>
         ${state.category !== "extended" ? `
-          <button id="btn-switch-extended" class="btn-submit" style="background: var(--primary-blue); max-width: 480px;">
-            Try Extended Questioning (Check All Conditions) →
+          <button id="btn-switch-extended" class="btn-submit" style="max-width: 380px;">
+            Run Extended Check Across All Categories →
           </button>
         ` : ""}
       </div>
@@ -446,21 +489,22 @@ async function renderResultsPage() {
 
       if (partialMatches.length > 0) {
         fallbackContainer.innerHTML = `
-          <div class="card" style="margin-top: 20px;">
-            <h3 style="font-size: 23px; margin-bottom: 8px;">Closest Partial Matches</h3>
-            ${partialMatches.map(item => `
-              <div style="border: 2px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; background: var(--bg-page);">
-                <div style="font-size: 22px; font-weight: 700;">
-                  ${formatName(item.id)}
-                  <span style="font-size: 17px; color: var(--success-green);">
-                    (Matched ${item.matched.length} of${item.symptoms.length} symptoms)
-                  </span>
+          <div class="card partial-matches-card">
+            <div class="candidates-header">
+              <h3 class="section-title">Closest Partial Matches</h3>
+              <span class="result-source-pill">${CLINICAL_REFERENCE_SOURCE}</span>
+            </div>
+            <div class="partial-match-list">
+              ${partialMatches.map(item => `
+                <div class="partial-match-item">
+                  <div class="partial-match-header">
+                    <span class="partial-match-name">${formatName(item.id)}</span>
+                    <span class="answer-badge-yes">${item.matched.length}/${item.symptoms.length} matched</span>
+                  </div>
+                  <p class="partial-match-desc">${DISEASE_DESCRIPTIONS[item.id] || ""}</p>
                 </div>
-                <div style="font-size: 18px; color: var(--text-muted); margin-top: 6px;">
-                  ${DISEASE_DESCRIPTIONS[item.id] || ""}
-                </div>
-              </div>
-            `).join("")}
+              `).join("")}
+            </div>
           </div>
         `;
       }
@@ -469,7 +513,6 @@ async function renderResultsPage() {
 
   document.getElementById("triage-page").classList.remove("active");
   document.getElementById("results-page").classList.add("active");
-  window.scrollTo(0, 0);
 
   const switchExtendedBtn = document.getElementById("btn-switch-extended");
   if (switchExtendedBtn) {
@@ -482,18 +525,103 @@ async function renderResultsPage() {
 }
 
 /**
- * 6. INITIALIZATION & EVENT LISTENERS
+ * ============================================================================
+ * 6. INITIALIZATION, PARSING & EVENT LISTENERS
+ * ============================================================================
  */
-async function autoDiscoverPrologFile() {
-  try {
-    await queryPrologCandidates("fever", []);
-    prologBridge.isLoaded = true;
-    updatePrologStatusUI(true, "Connected to Prolog");
-  } catch (error) {
-    prologBridge.isLoaded = false;
-    updatePrologStatusUI(false, `Cannot connect to Prolog: ${error.message}`);
+function updateInitProgress(percent, text, isError = false) {
+  const progressBar = document.getElementById("init-progress-bar");
+  const progressText = document.getElementById("init-progress-text");
+  const progressPercent = document.getElementById("init-progress-percent");
+
+  if (progressBar) {
+    progressBar.style.width = `${percent}%`;
+    progressBar.style.background = isError ? "var(--danger-red)" : "var(--primary-blue)";
   }
+  if (progressPercent) progressPercent.textContent = `${percent}%`;
+  if (progressText) progressText.textContent = text;
+}
+
+async function parsePrologText(plText, sourceLabel) {
+  const progressContainer = document.getElementById("init-progress-container");
+
+  updateInitProgress(65, "Indexing clinical categories...");
+  const categories = {};
+  for (const match of plText.matchAll(/in_category\(\s*([a-zA-Z0-9_]+)\s*,\s*([a-zA-Z0-9_]+)\s*\)\s*\./g)) {
+    categories[match[1].trim()] = match[2].trim();
+  }
+  await new Promise(r => setTimeout(r, 150));
+
+  updateInitProgress(85, "Mapping symptom rules...");
+  const conditions = {};
+  for (const match of plText.matchAll(/condition\(\s*([a-zA-Z0-9_]+)\s*,\s*\[([^\]]+)\]\s*\)\s*\./g)) {
+    conditions[match[1].trim()] = match[2].split(",").map(s => s.trim());
+  }
+
+  prologKnowledgeBase = Object.keys(conditions).map(id => ({
+    id,
+    category: categories[id],
+    symptoms: conditions[id]
+  }));
+
+  if (prologKnowledgeBase.length === 0) {
+    throw new Error("No valid Prolog facts found in file.");
+  }
+
+  await new Promise(r => setTimeout(r, 150));
+  updateInitProgress(100, `Ready (${prologKnowledgeBase.length} conditions)`);
+  prologBridge.isLoaded = true;
+  updatePrologStatusUI(true, `Knowledge Base Ready • ${prologKnowledgeBase.length} Conditions`);
+
+  setTimeout(() => {
+    if (progressContainer) progressContainer.style.display = "none";
+  }, 600);
+
   renderWorkspace();
+}
+
+async function autoDiscoverPrologFile() {
+  const candidatePaths = ["../private/conditions.pl", "conditions.pl", "./conditions.pl"];
+
+  updateInitProgress(20, "Locating conditions.pl...");
+  await new Promise(r => setTimeout(r, 150));
+
+  for (const path of candidatePaths) {
+    try {
+      const response = await fetch(path);
+      if (response.ok) {
+        updateInitProgress(45, `Loading ${path}...`);
+        const plText = await response.text();
+        await parsePrologText(plText, path);
+        return;
+      }
+    } catch (_) {
+      // Continue trying fallback paths
+    }
+  }
+
+  updateInitProgress(100, "Manual file selection required", true);
+  prologBridge.isLoaded = false;
+  updatePrologStatusUI(false, "Select conditions.pl to begin");
+  renderWorkspace();
+}
+
+const fileInput = document.getElementById("pl-file-input");
+if (fileInput) {
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const progressContainer = document.getElementById("init-progress-container");
+      if (progressContainer) progressContainer.style.display = "block";
+      updateInitProgress(35, `Reading ${file.name}...`);
+      const text = await file.text();
+      await parsePrologText(text, file.name);
+    } catch (error) {
+      updateInitProgress(100, "Invalid file format", true);
+      updatePrologStatusUI(false, `Parse Error: ${error.message}`);
+    }
+  });
 }
 
 document.querySelectorAll(".category-card-btn").forEach(btn => {
@@ -513,7 +641,7 @@ document.getElementById("btn-change-category").addEventListener("click", () => {
   state.isContinuingAfterMatch = false;
   state.isFinished = false;
   document.getElementById("question-step-view").style.display = "none";
-  document.getElementById("category-step-view").style.display = "block";
+  document.getElementById("category-step-view").style.display = "flex";
   renderWorkspace();
 });
 
@@ -543,7 +671,7 @@ document.getElementById("btn-results-restart").addEventListener("click", () => {
   document.getElementById("results-page").classList.remove("active");
   document.getElementById("triage-page").classList.add("active");
   document.getElementById("question-step-view").style.display = "none";
-  document.getElementById("category-step-view").style.display = "block";
+  document.getElementById("category-step-view").style.display = "flex";
   renderWorkspace();
 });
 
