@@ -1,6 +1,9 @@
-% FACTS
+:- dynamic answer/2.
 
+% ==========================================
+% FACTS: CATEGORIES
 % Conditions divided into three categories: Fever, Stomach, Body
+% ==========================================
 
 % Fever - 21
 in_category(influenza, fever).
@@ -68,7 +71,9 @@ in_category(depression, body).
 in_category(schizophrenia, body).
 in_category(alzheimers, body).
 
-% Conditions with their corresponding symptoms
+% ==========================================
+% FACTS: CONDITIONS & SYMPTOMS
+% ==========================================
 
 % FEVER CONDITIONS
 % Subset chain 1: influenza -> measles
@@ -153,16 +158,14 @@ condition(depression, [low_mood, loss_of_interest, sleep_problems, hopelessness]
 condition(schizophrenia, [hallucinations, delusions, disordered_thinking, social_withdrawal]).
 condition(alzheimers, [memory_loss, confusion, language_problems, mood_changes]).
 
+% ==========================================
 % RULES
+% ==========================================
 
-% Main entry point for the diagnostic system. 
-% First, it clears any previous answers. 
-% Then, it prompts the user to choose a category of symptoms (Fever, Stomach, or Body) by typing the corresponding number. 
-% After the user makes a valid choice, it proceeds to ask about all symptoms in that category. 
-% If the user provides invalid input, it prompts them to try again.
+% Main entry point for the diagnostic system.
 start :-
-	retractall(answer(_, _)), %clear previous answers
-	write('Choose category, type the number only'), 
+	retractall(answer(_, _)),
+	write('Choose category, type the number only'),
 	nl,
 	write('1. Fever'),
 	nl,
@@ -170,60 +173,61 @@ start :-
 	nl,
 	write('3. Body'),
 	nl,
-	read_line_to_string(user_input, Raw), %wait for user input and place it in Raw variable
-	(catch(number_string(Choice, Raw), % catch any errors that may occur when converting the input to a number	
-			_,
-			fail),
-		choice(Choice, Category) -> 
-	write('You picked: '),
-		write(Category), 
+	read_line_to_string(user_input, Raw),
+	(	catch(number_string(Choice, Raw), _, fail),
+		choice(Choice, Category)
+	->	write('You picked: '),
+		write(Category),
 		nl,
 		ask_all(Category),
-		nl;
-	write('Invalid input. Try again.'),
+		nl
+	;	write('Invalid input. Try again.'),
 		nl,
-		start).
+		start
+	).
 
-% VALIDATION: ask about a symptom and record the answer. 
-% If the answer is not yes or no, ask again.
+% Ask about a symptom and record the answer.
+% Re-prompts if the user types anything other than yes or no.
 ask(Symptom, Category) :-
 	has_symptom(Condition, Symptom),
 	candidate(Condition, Category),
-	 \+ answer(Symptom, _),
+	\+ answer(Symptom, _),
+	repeat,
 	format("Do you have ~w? (yes/no): ", [Symptom]),
-	read_line_to_string(user_input, Raw), 
-	string_lower(Raw, Lower), 
-	atom_string(Answer, Lower), 
-	assertz(answer(Symptom, Answer)). 
+	read_line_to_string(user_input, Raw),
+	string_lower(Raw, Lower),
+	atom_string(Answer, Lower),
+	(	(Answer == yes ; Answer == no)
+	->	assertz(answer(Symptom, Answer)), !
+	;	write('Invalid input. Please enter yes or no.'),
+		nl,
+		fail
+	).
 
-% Ask about all symptoms in a category. 
-% If the user has a symptom, ask about the next symptom. 
-% If the user does not have any more symptoms, find the most likely condition based on the symptoms the user has and print it out. 
-% If no condition is found, print out a message saying that the condition is unknown and to visit a doctor immediately.
+% Ask about all relevant symptoms in a category and output the final diagnosis.
 ask_all(Category) :-
-	(ask(Symptom, Category) -> 
-	ask_all(Category); 
-	(candidate(Condition, Category)) -> 
-	format("Most likely condition is: ~w", [Condition]),
-		nl;
-	write("Condition is unknown. Please visit a doctor immediately!")).
+	(	ask(_, Category)
+	->	ask_all(Category)
+	;	candidate(Condition, Category)
+	->	format("Most likely condition is: ~w", [Condition]),
+		nl
+	;	write("Condition is unknown. Please visit a doctor immediately!"),
+		nl
+	).
 
-% Determine if a condition is a candidate for the given category based on the user's answers. 
-% Returns true if the condition is in the category and the user has answered yes to all of the symptoms for that condition 
-% and has not answered no to any of the symptoms for that condition. 
-% Otherwise, returns false.
+% Determine if a condition is a candidate for the given category based on the user's answers.
 candidate(Condition, Category) :-
-	 in_category(Condition, Category), 
-	 \+ (answer(Symptom, yes), 
-		 \+ has_symptom(Condition, Symptom)), 
-	 \+ (answer(Symptom, no), 
+	in_category(Condition, Category),
+	\+ (answer(Symptom, yes),
+		\+ has_symptom(Condition, Symptom)),
+	\+ (answer(Symptom, no),
 		has_symptom(Condition, Symptom)).
 
 choice(1, fever).
 choice(2, stomach).
 choice(3, body).
 
-% Checks if a condition has a symptom. Returns true if the symptom is in the list of symptoms for that condition otherwise returns false.
+% Checks if a condition has a symptom.
 has_symptom(Condition, Symptom) :-
 	condition(Condition, Symptoms),
 	member(Symptom, Symptoms).
