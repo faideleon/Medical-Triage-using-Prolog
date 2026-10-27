@@ -152,3 +152,78 @@ condition(arthritis, [joint_pain, joint_stiffness, joint_swelling, morning_stiff
 condition(depression, [low_mood, loss_of_interest, sleep_problems, hopelessness]).
 condition(schizophrenia, [hallucinations, delusions, disordered_thinking, social_withdrawal]).
 condition(alzheimers, [memory_loss, confusion, language_problems, mood_changes]).
+
+% RULES
+
+% Main entry point for the diagnostic system. 
+% First, it clears any previous answers. 
+% Then, it prompts the user to choose a category of symptoms (Fever, Stomach, or Body) by typing the corresponding number. 
+% After the user makes a valid choice, it proceeds to ask about all symptoms in that category. 
+% If the user provides invalid input, it prompts them to try again.
+start :-
+	retractall(answer(_, _)), %clear previous answers
+	write('Choose category, type the number only'), 
+	nl,
+	write('1. Fever'),
+	nl,
+	write('2. Stomach'),
+	nl,
+	write('3. Body'),
+	nl,
+	read_line_to_string(user_input, Raw), %wait for user input and place it in Raw variable
+	(catch(number_string(Choice, Raw), % catch any errors that may occur when converting the input to a number	
+			_,
+			fail),
+		choice(Choice, Category) -> 
+	write('You picked: '),
+		write(Category), 
+		nl,
+		ask_all(Category),
+		nl;
+	write('Invalid input. Try again.'),
+		nl,
+		start).
+
+% VALIDATION: ask about a symptom and record the answer. 
+% If the answer is not yes or no, ask again.
+ask(Symptom, Category) :-
+	has_symptom(Condition, Symptom),
+	candidate(Condition, Category),
+	 \+ answer(Symptom, _),
+	format("Do you have ~w? (yes/no): ", [Symptom]),
+	read_line_to_string(user_input, Raw), 
+	string_lower(Raw, Lower), 
+	atom_string(Answer, Lower), 
+	assertz(answer(Symptom, Answer)). 
+
+% Ask about all symptoms in a category. 
+% If the user has a symptom, ask about the next symptom. 
+% If the user does not have any more symptoms, find the most likely condition based on the symptoms the user has and print it out. 
+% If no condition is found, print out a message saying that the condition is unknown and to visit a doctor immediately.
+ask_all(Category) :-
+	(ask(Symptom, Category) -> 
+	ask_all(Category); 
+	(candidate(Condition, Category)) -> 
+	format("Most likely condition is: ~w", [Condition]),
+		nl;
+	write("Condition is unknown. Please visit a doctor immediately!")).
+
+% Determine if a condition is a candidate for the given category based on the user's answers. 
+% Returns true if the condition is in the category and the user has answered yes to all of the symptoms for that condition 
+% and has not answered no to any of the symptoms for that condition. 
+% Otherwise, returns false.
+candidate(Condition, Category) :-
+	 in_category(Condition, Category), 
+	 \+ (answer(Symptom, yes), 
+		 \+ has_symptom(Condition, Symptom)), 
+	 \+ (answer(Symptom, no), 
+		has_symptom(Condition, Symptom)).
+
+choice(1, fever).
+choice(2, stomach).
+choice(3, body).
+
+% Checks if a condition has a symptom. Returns true if the symptom is in the list of symptoms for that condition otherwise returns false.
+has_symptom(Condition, Symptom) :-
+	condition(Condition, Symptoms),
+	member(Symptom, Symptoms).
