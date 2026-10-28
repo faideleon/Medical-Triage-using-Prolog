@@ -13,16 +13,6 @@ has_symptom(Condition, Symptom) :-
 	member(Symptom, Symptoms).
 
 
-% category_symptoms(Category, Symptoms)
-% All the symptoms used by the conditions in one category, without repeats.
-% These are the symptoms the nurse can choose from.
-category_symptoms(Category, Symptoms) :-
-	findall(Symptom,
-		(condition(_, Category, List), member(Symptom, List)),
-		All),
-	list_to_set(All, Symptoms).
-
-
 % match_count(Condition, PatientSymptoms, Count)
 % How many of the condition's symptoms the patient has.
 match_count(Condition, PatientSymptoms, Count) :-
@@ -31,13 +21,13 @@ match_count(Condition, PatientSymptoms, Count) :-
 	length(Same, Count).
 
 
-% likely_conditions(Category, PatientSymptoms, Top3)
+% likely_conditions(PatientSymptoms, Top3)
 % The 3 best matching conditions, as Count-Condition pairs.
 % The condition with the most matching symptoms comes first.
 % A condition needs at least 1 matching symptom to be listed.
-likely_conditions(Category, PatientSymptoms, Top3) :-
+likely_conditions(PatientSymptoms, Top3) :-
 	findall(Count-Condition,
-		(condition(Condition, Category, _),
+		(condition(Condition, _, _),
 		 match_count(Condition, PatientSymptoms, Count),
 		 Count > 0),
 		Matches),
@@ -64,6 +54,12 @@ condition_names([_-Condition|Rest], [Condition|Names]) :-
 	condition_names(Rest, Names).
 
 
+% condition_category(Condition, Category): 'unknown' when nothing matched.
+condition_category(none, unknown).
+condition_category(Condition, Category) :-
+	condition(Condition, Category, _).
+
+
 % high_risk(PatientSymptoms)
 % True when the patient has a dangerous symptom, or has ALL the symptoms
 % of a dangerous condition (the lists are in knowledge.pl).
@@ -74,6 +70,12 @@ high_risk(PatientSymptoms) :-
 	high_risk_condition(Condition),
 	condition(Condition, _, Symptoms),
 	subset(Symptoms, PatientSymptoms).
+
+% high_risk_answer(PatientSymptoms, Answer): 'YES' or 'NO' for the file.
+high_risk_answer(PatientSymptoms, 'YES') :-
+	high_risk(PatientSymptoms),
+	!.
+high_risk_answer(_, 'NO').
 
 
 % resource_count(Condition, Count)

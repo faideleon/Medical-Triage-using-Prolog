@@ -89,6 +89,21 @@ async function queryAllPrologConditions(category) {
   return queryPrologCandidates(category, []);
 }
 
+// Sends the finished patient to Prolog, which saves it to
+// data/intake_records.txt for the C triage program. Returns the patient number.
+async function savePatient(name, age, answers) {
+  const response = await fetch("/api/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, age, answers })
+  });
+  if (!response.ok) {
+    throw new Error("Prolog could not save the patient.");
+  }
+  const result = await response.json();
+  return result.id;
+}
+
 /**
  * ============================================================================
  * 3. ENGINE STATE & CONTINUED-QUESTIONING SCRIPT CHECK
@@ -526,9 +541,26 @@ document.getElementById("btn-modal-back").addEventListener("click", () => {
   confirmModal.classList.remove("active");
 });
 
-document.getElementById("btn-modal-confirm").addEventListener("click", () => {
-  confirmModal.classList.remove("active");
-  renderResultsPage();
+document.getElementById("btn-modal-confirm").addEventListener("click", async () => {
+  const name = document.getElementById("patient-name").value.trim();
+  const age = document.getElementById("patient-age").value.trim();
+  const errorText = document.getElementById("save-error");
+
+  if (name === "" || age === "") {
+    errorText.textContent = "Please type the patient's name and age.";
+    return;
+  }
+
+  try {
+    const id = await savePatient(name, Number(age), state.answers);
+    errorText.textContent = "";
+    confirmModal.classList.remove("active");
+    await renderResultsPage();
+    document.getElementById("primary-result-container").insertAdjacentHTML("afterbegin",
+      `<p style="font-size: 20px; font-weight: 700;">Saved as patient number ${id} for triage.</p>`);
+  } catch (error) {
+    errorText.textContent = error.message;
+  }
 });
 
 document.getElementById("btn-results-back").addEventListener("click", () => {
@@ -537,6 +569,8 @@ document.getElementById("btn-results-back").addEventListener("click", () => {
 });
 
 document.getElementById("btn-results-restart").addEventListener("click", () => {
+  document.getElementById("patient-name").value = "";
+  document.getElementById("patient-age").value = "";
   state.category = null;
   state.answers = [];
   state.candidates = [];

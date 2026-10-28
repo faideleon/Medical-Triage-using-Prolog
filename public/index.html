@@ -667,6 +667,19 @@
 
       <div id="modal-review-box" class="modal-review-box"></div>
 
+      <!-- Patient details, saved by Prolog for the C triage program -->
+      <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 16px; font-size: 19px;">
+        <label style="flex: 2; min-width: 200px;">
+          Patient name
+          <input id="patient-name" type="text" style="width: 100%; font-size: 19px; padding: 10px; margin-top: 4px;">
+        </label>
+        <label style="flex: 1; min-width: 100px;">
+          Age
+          <input id="patient-age" type="number" min="0" max="130" style="width: 100%; font-size: 19px; padding: 10px; margin-top: 4px;">
+        </label>
+      </div>
+      <p id="save-error" style="color: var(--danger-red); font-size: 18px; margin-top: 8px;"></p>
+
       <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 20px;">
         <button id="btn-modal-back" class="btn-secondary" style="flex: 1;">
           ← Go Back & Change Answers
