@@ -6,7 +6,7 @@
 % then open http://localhost:8000/
 %
 % For the nurse intake in the terminal (writes the file for the C program):
-%   swipl private/server.pl
+%   swipl private/intake.pl
 %   ?- start.
 
 :- use_module(library(http/thread_httpd)).
@@ -19,8 +19,12 @@
 
 :- ensure_loaded(knowledge).
 :- ensure_loaded(triage).
-:- ensure_loaded(records).
 :- ensure_loaded(intake).
+
+% private_dir(Dir): the folder this file is in, saved when it loads.
+:- dynamic private_dir/1.
+:- prolog_load_context(directory, Dir),
+   retractall(private_dir(_)), assertz(private_dir(Dir)).
 
 :- http_handler(root(api/triage), handle_triage, [method(post)]).
 :- http_handler(root(.), serve_public, [prefix]).
@@ -117,3 +121,9 @@ matches_answers(Condition, Answers) :-
 	forall(member(Symptom - yes, Answers),
 		has_symptom(Condition, Symptom)),
 	still_possible(Answers, Condition).
+
+% still_possible(Answers, Condition)
+% The patient did not say "no" to any symptom of this condition.
+still_possible(Answers, Condition) :-
+	\+ (member(Symptom - no, Answers),
+		has_symptom(Condition, Symptom)).

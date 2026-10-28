@@ -1,155 +1,85 @@
-% RULES
-% How the symptom checker thinks. Facts come from knowledge.pl.
+% SYMPTOM CHECKER RULES
+% Uses the facts in knowledge.pl to find which conditions match the
+% patient's symptoms (the initial diagnosis).
 %
-% Answers are always a list of Symptom-yes / Symptom-no pairs, for example
-% [fever-yes, cough-no]. Symptom-unsure means "asked, but the patient does
-% not know": it is never asked again and counts as neither yes nor no.
-% Category is one of the category/2 ids, or `all` to check every condition.
-
-:- use_module(library(lists)).
-:- use_module(library(pairs)).
+% Prolog does NOT decide the ESI level. It only writes what it found to
+% the intake file, and the C triage program decides the ESI level.
 
 
-% in_scope(+Category, ?Condition)
-% Condition belongs to the chosen category (`all` means every condition).
-in_scope(all, Condition) :-
-	condition(Condition, _, _).
-in_scope(Category, Condition) :-
-	Category \== all,
-	condition(Condition, Category, _).
-
-% has_symptom(?Condition, ?Symptom)
+% has_symptom(Condition, Symptom)
+% Symptom is one of the symptoms of Condition.
 has_symptom(Condition, Symptom) :-
 	condition(Condition, _, Symptoms),
 	member(Symptom, Symptoms).
 
-% still_possible(+Answers, +Condition)
-% The patient has not said "no" to any symptom of this condition.
-still_possible(Answers, Condition) :-
-	 \+ (member(Symptom - no, Answers),
-		has_symptom(Condition, Symptom)).
 
-% yes_count(+Answers, +Condition, -Count)
-% How many of the condition's symptoms the patient said "yes" to.
-yes_count(Answers, Condition, Count) :-
-	aggregate_all(count,
-		(has_symptom(Condition, Symptom),
-			member(Symptom - yes, Answers)),
-		Count).
-
-
-% next_question(+Category, +Answers, -Symptom)
-% Picks the next symptom to ask about. We follow the condition that is
-% currently matching best, and ask its first symptom not asked yet.
-% When two conditions match equally well, the dangerous one goes first,
-% so serious illnesses are ruled out early.
-% Fails when there is nothing left to ask, or a clear winner is found.
-next_question(Category, Answers, Symptom) :-
-	 \+ clear_winner(Category, Answers),
-	findall(Score - Condition,
-		( in_scope(Category, Condition),
-			still_possible(Answers, Condition),
-			yes_count(Answers, Condition, Yes),
-			(high_risk_condition(Condition) ->
-		Risk = 0;
-		Risk = 1),
-			NegYes is  - Yes,
-			% negative so the best comes first
-			Score = NegYes - Risk),
-		Scored),
-	keysort(Scored, Sorted),
-	% keysort keeps knowledge.pl order on ties
-	member(_ - Condition, Sorted),
-	condition(Condition, _, Symptoms),
-	member(Symptom, Symptoms),
-	 \+ member(Symptom - _, Answers),
-	!.
-
-% clear_winner(+Category, +Answers)
-% One condition has all its symptoms confirmed, and no other possible
-% condition has even one "yes" yet. Asking more would not change anything.
-clear_winner(Category, Answers) :-
-		in_scope(Category, Winner),
-	full_match(Answers, Winner),
-	 \+ ( in_scope(Category, Other),
-		Other \== Winner,
-		 \+ full_match(Answers, Other),
-		still_possible(Answers, Other),
-		yes_count(Answers, Other, Yes),
-		Yes > 0),
-	!.
-
-full_match(Answers, Condition) :-
-	condition(Condition, _, Symptoms),
-	forall(member(S, Symptoms),
-		member(S - yes, Answers)).
-
-% count_possible(+Category, +Answers, -Count)
-count_possible(Category, Answers, Count) :-
-	aggregate_all(count,
-		( in_scope(Category, C),
-			still_possible(Answers, C)),
-		Count).
-
-
-% likely_conditions(+Category, +Answers, -Matches)
-% The best 3 matches, as match(Condition, Yes, Total) terms.
-% Sorted by percent of symptoms matched, then by number matched.
-% A condition needs at least one "yes" to be listed.
-likely_conditions(Category, Answers, Matches) :-
-	findall(Key - match(Condition, Yes, Total),
-		( in_scope(Category, Condition),
-			yes_count(Answers, Condition, Yes),
-			Yes > 0,
-			condition(Condition, _, Symptoms),
-			length(Symptoms, Total),
-			Percent is  - (Yes/Total),
-			% negative so the best comes first
-			NegYes is  - Yes,
-			Key = Percent - NegYes),
-		Keyed),
-	keysort(Keyed, Sorted),
-	% ties keep knowledge.pl order
-	pairs_values(Sorted, All),
-	take(3, All, Matches).
-
-take(N, List, Front) :-
-	length(List, Len),
-	(Len =< N ->
-	Front = List;
-	length(Front, N),
-		append(Front, _, List)).
-
-
-% high_risk_reasons(+Answers, +Matches, +Confused, +Pain, -Reasons)
-% Every reason the patient should see the triage nurse immediately.
-% Confused is yes/no, Pain is 0-10.
-high_risk_reasons(Answers, Matches, Confused, Pain, Reasons) :-
+% category_symptoms(Category, Symptoms)
+% All the symptoms used by the conditions in one category, without repeats.
+% These are the symptoms the nurse can choose from.
+category_symptoms(Category, Symptoms) :-
 	findall(Symptom,
-		(member(Symptom - yes, Answers),
-			high_risk_symptom(Symptom)),
-		FromSymptoms),
-	findall(Condition,
-		(member(match(Condition, Yes, Total),
-				Matches),
-			Yes =:= Total,
-			% only fully matched conditions
-			high_risk_condition(Condition)),
-		FromConditions),
-	(Confused == yes ->
-	FromMind = [confused_or_drowsy];
-	FromMind = []),
-	severe_pain_score(Limit),
-	(Pain  >= Limit ->
-	FromPain  = [severe_pain];
-	FromPain  = []),
-	append([FromSymptoms, FromConditions, FromMind, FromPain], All),
-	list_to_set(All, Reasons).
+		(condition(_, Category, List), member(Symptom, List)),
+		All),
+	list_to_set(All, Symptoms).
 
 
-% expected_resources(+Matches, -Resources)
-% Resources needed for the best match (empty when nothing matched).
-expected_resources([match(Condition, _, _)|_], Resources) :-
-	resources(Condition, Resources),
-	!.
-expected_resources(_, []).
+% match_count(Condition, PatientSymptoms, Count)
+% How many of the condition's symptoms the patient has.
+match_count(Condition, PatientSymptoms, Count) :-
+	condition(Condition, _, Symptoms),
+	intersection(Symptoms, PatientSymptoms, Same),
+	length(Same, Count).
+
+
+% likely_conditions(Category, PatientSymptoms, Top3)
+% The 3 best matching conditions, as Count-Condition pairs.
+% The condition with the most matching symptoms comes first.
+% A condition needs at least 1 matching symptom to be listed.
+likely_conditions(Category, PatientSymptoms, Top3) :-
+	findall(Count-Condition,
+		(condition(Condition, Category, _),
+		 match_count(Condition, PatientSymptoms, Count),
+		 Count > 0),
+		Matches),
+	sort(1, @>=, Matches, Sorted),	% biggest Count first, keeps duplicates
+	first_n(3, Sorted, Top3).
+
+% first_n(N, List, Front): the first N items of List.
+first_n(0, _, []) :- !.
+first_n(_, [], []) :- !.
+first_n(N, [Item|Rest], [Item|Front]) :-
+	N1 is N - 1,
+	first_n(N1, Rest, Front).
+
+
+% best_condition(Matches, Condition)
+% The first match is the best one. 'none' when nothing matched.
+best_condition([], none).
+best_condition([_-Condition|_], Condition).
+
+
+% condition_names(Matches, Names): only the names from Count-Condition pairs.
+condition_names([], []).
+condition_names([_-Condition|Rest], [Condition|Names]) :-
+	condition_names(Rest, Names).
+
+
+% high_risk(PatientSymptoms)
+% True when the patient has a dangerous symptom, or has ALL the symptoms
+% of a dangerous condition (the lists are in knowledge.pl).
+high_risk(PatientSymptoms) :-
+	member(Symptom, PatientSymptoms),
+	high_risk_symptom(Symptom).
+high_risk(PatientSymptoms) :-
+	high_risk_condition(Condition),
+	condition(Condition, _, Symptoms),
+	subset(Symptoms, PatientSymptoms).
+
+
+% resource_count(Condition, Count)
+% How many hospital resources (labs, x-ray, ...) the condition usually needs.
+% The C program uses this number for the ESI level.
+resource_count(none, 0).
+resource_count(Condition, Count) :-
+	resources(Condition, List),
+	length(List, Count).

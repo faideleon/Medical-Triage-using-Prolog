@@ -63,9 +63,6 @@ high_risk_condition(deep_vein_thrombosis).
 high_risk_condition(tetanus).
 high_risk_condition(rabies).
 
-% Pain at or above this score (0-10) counts as high risk.
-severe_pain_score(7).
-
 
 % CONDITIONS
 % condition(Name, Category, Symptoms).
