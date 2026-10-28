@@ -1,102 +1,98 @@
 # Intake file format (Prolog → C)
 
-This file is the agreement between the two programs. The Prolog symptom checker
-**writes** it, and the C triage program **reads** it.
+This file is the agreement between the two programs:
 
-- Default location: `data/intake_records.txt` (in this project).
-  Set the `TRIAGE_FILE` environment variable to use a different path, for example
-  a folder both programs can reach.
-- Encoding: UTF-8, one `KEY=value` per line.
-- Prolog only **appends**. It never edits or deletes old records.
-  The C program should remember which `ID`s it has already processed
-  instead of deleting lines from the file.
+- **Prolog** is the symptom checker. It asks the questions, finds the possible
+  conditions (initial diagnosis) and **writes** the patient to the file.
+- **C** is the triage. It **reads** the file, decides the ESI level and puts
+  the patient in a bed.
+
+Location: `data/intake_records.txt` (run both programs from the project root).
+Prolog only **appends** new patients at the end. It never changes old ones.
 
 ## One patient = one block
 
+A normal patient:
+
 ```
 BEGIN
-ID=P20261026-003
-DATE=2026-10-26
-TIME=14:30:05
-ARRIVED=2026-10-26 14:27:40
+ID=1
+ARRIVED=2026-10-29 14:30:05
 NAME=Juan Dela Cruz
 AGE=45
 SEX=M
 EMERGENCY=NO
 EMERGENCY_SIGNS=
 CATEGORY=fever_breathing
-SYMPTOMS_YES=fever,cough,phlegm,shortness_of_breath,chest_pain
-SYMPTOMS_NO=runny_nose,sore_throat,fast_breathing
-CONFUSED=NO
+SYMPTOMS=fever,cough,sore_throat,loss_of_smell,fast_breathing
+CONDITION=covid_19
+POSSIBLE_CONDITIONS=covid_19,acute_respiratory_infection,influenza
+HIGH_RISK=YES
+RESOURCES=1
 PAIN=6
 HEART_RATE=112
-RESP_RATE=24
+RESP_RATE=
 SPO2=93
-TEMP_C=38.6
-SYSTOLIC_BP=
-HIGH_RISK=YES
-HIGH_RISK_REASONS=shortness_of_breath,chest_pain,pneumonia
-LIKELY_CONDITIONS=pneumonia:5/5,acute_respiratory_infection:2/3,influenza:2/3
-RESOURCES=labs,xray,iv_medication
-RESOURCE_COUNT=3
 END
 ```
 
-### Reading tips for C
+An emergency patient (Prolog stops asking questions, so the block is short):
 
-- Read line by line with `fgets`. Start a new patient on `BEGIN`, finish it on `END`.
-- Split each line at the **first** `=` only (`strchr(line, '=')`).
-  The value can contain spaces or commas (for example a name).
-- An **empty value** means "not known / not measured". Do not treat it as 0.
-- Lists are comma-separated with no spaces. Split them with `strtok(value, ",")`.
-- Strip the trailing `\n` (and `\r` on Windows) from each line.
+```
+BEGIN
+ID=2
+ARRIVED=2026-10-29 14:31:10
+NAME=Unknown
+EMERGENCY=YES
+EMERGENCY_SIGNS=unresponsive,severe_bleeding
+END
+```
 
 ## Fields
 
-| Key | Values | Meaning |
+| Key | Example | Meaning |
 |---|---|---|
-| `ID` | `P<yyyymmdd>-<nnn>` | Patient number, counts up each day |
-| `DATE`, `TIME` | `2026-10-26`, `14:30:05` | When the nurse saved the record |
-| `ARRIVED` | `2026-10-26 14:27:40` | When the nurse started the intake (`?- start.`). The C program can measure waiting time from here |
-| `NAME` | text | Patient name. `Unknown` for an unidentified emergency arrival |
-| `AGE` | 0–130, may be empty | Years. Only an emergency arrival can have it empty |
-| `SEX` | `M` / `F` / `U` | `U` = unknown |
-| `EMERGENCY` | `YES` / `NO` | `YES` = an emergency sign was ticked. **All other medical fields are empty.** |
-| `EMERGENCY_SIGNS` | list | Which signs, see below |
-| `CATEGORY` | `fever_breathing`, `stomach_urinary`, `skin_eyes`, `heart_brain`, `unknown` | Body area of the best matching condition. Useful for choosing a section |
-| `SYMPTOMS_YES` / `SYMPTOMS_NO` | list | Symptoms the patient confirmed / denied |
-| `CONFUSED` | `YES` / `NO` | Confused, very sleepy or not making sense |
-| `PAIN` | 0–10 | Pain score |
-| `HEART_RATE` | /min, may be empty | |
-| `RESP_RATE` | /min, may be empty | |
-| `SPO2` | %, may be empty | |
-| `TEMP_C` | °C, may be empty | |
-| `SYSTOLIC_BP` | mmHg, may be empty | |
-| `HIGH_RISK` | `YES` / `NO` | Prolog thinks the patient should not wait |
-| `HIGH_RISK_REASONS` | list | High-risk symptoms or conditions, plus `confused_or_drowsy` and `severe_pain` (pain ≥ 7) |
-| `LIKELY_CONDITIONS` | list of `name:matched/total` | Best 3 matches, best first |
-| `RESOURCES` | list | Resources the best match usually needs |
-| `RESOURCE_COUNT` | number, may be empty | How many resource types are in `RESOURCES`. Empty when no condition matched (unknown – treat as needing a nurse's judgement) |
+| `ID` | `1` | Patient number, counts up: 1, 2, 3... |
+| `ARRIVED` | `2026-10-29 14:30:05` | When the patient was saved. Use it for "first come, first served" |
+| `NAME` | `Juan Dela Cruz` | `Unknown` if an emergency patient has no name yet |
+| `AGE` | `45` | Years |
+| `SEX` | `M` / `F` | |
+| `EMERGENCY` | `YES` / `NO` | `YES` = an emergency sign was picked |
+| `EMERGENCY_SIGNS` | `unresponsive,shock` | Which emergency signs |
+| `CATEGORY` | `fever_breathing` | Main problem area: `fever_breathing`, `stomach_urinary`, `skin_eyes`, `heart_brain` |
+| `SYMPTOMS` | `fever,cough` | Symptoms the patient has |
+| `CONDITION` | `covid_19` | Best matching condition. `none` if nothing matched |
+| `POSSIBLE_CONDITIONS` | `covid_19,influenza` | Up to 3 matches, best first |
+| `HIGH_RISK` | `YES` / `NO` | `YES` if a dangerous symptom or dangerous condition was found |
+| `RESOURCES` | `3` | How many hospital resources the condition usually needs (labs, x-ray, IV...). `0` if `CONDITION=none` |
+| `PAIN` | `6` | Pain score 0-10 |
+| `HEART_RATE` | `112` | Beats per minute. Empty = not measured |
+| `RESP_RATE` | `24` | Breaths per minute. Empty = not measured |
+| `SPO2` | `93` | Oxygen level %. Empty = not measured |
 
-Emergency signs: `not_breathing`, `unresponsive`, `severe_breathing`,
-`active_seizure`, `severe_bleeding`, `allergic_reaction`, `shock`, `major_trauma`.
+**A missing key or an empty value means "unknown".** Do not treat it as 0.
+For example an emergency block has no `AGE` or `PAIN`.
 
-Resource types: `labs`, `ecg`, `xray`, `imaging` (CT/MRI/ultrasound), `iv_fluids`,
-`iv_medication` (IV, IM or nebulized), `specialist_consult`, `simple_procedure`,
-`complex_procedure`.
+## Reading tips for C
 
-## How the C program can use this for ESI
+- Read line by line with `fgets`.
+- `BEGIN` starts a new patient, `END` means the patient is complete.
+- Split each line at the **first** `=` (`strchr(line, '=')`). The value can
+  have spaces, like a name.
+- Remove the `\n` (and `\r` on Windows) at the end of each line.
+- Lists are separated by commas with no spaces. Use `strtok(value, ",")`.
+- Ignore keys you do not know, so Prolog can add new ones later.
 
-The Emergency Severity Index (ESI) has 5 levels. Prolog gives the inputs,
-C makes the final decision:
+## How C can decide the ESI level
 
-| ESI question | Field(s) to use | Result |
+| Step | Fields | Result |
 |---|---|---|
-| A. Needs life-saving care now? | `EMERGENCY=YES` | ESI 1 |
-| B. High-risk, confused, or severe pain? | `HIGH_RISK=YES` | ESI 2 |
-| C. How many resources? | `RESOURCE_COUNT` | 0 → ESI 5, 1 → ESI 4, 2+ → ESI 3 |
-| D. Danger-zone vital signs? (only when C gave ESI 3) | `HEART_RATE`, `RESP_RATE`, `SPO2`, `AGE` | consider ESI 2 |
+| 1. Needs life-saving care now? | `EMERGENCY=YES` | ESI 1 |
+| 2. High risk, or severe pain? | `HIGH_RISK=YES`, or `PAIN` 7 or more | ESI 2 |
+| 3. How many resources? | `RESOURCES` | 0 → ESI 5, 1 → ESI 4, 2 or more → ESI 3 |
+| 4. Dangerous vital signs? (only if step 3 gave ESI 3) | `HEART_RATE` > 100, `RESP_RATE` > 20, `SPO2` < 92 | ESI 2 |
 
-Common adult danger-zone limits: heart rate > 100, breathing rate > 20,
-SpO₂ < 92%. Children have different limits by age.
-Check the exact thresholds with the hospital's clinical staff.
+If `CONDITION=none`, nothing matched, so a nurse should check the patient.
+C can treat it as ESI 3 to be safe.
+
+These limits are for adults. Children have different limits.

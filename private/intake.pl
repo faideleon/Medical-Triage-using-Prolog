@@ -1,49 +1,87 @@
 % NURSE INTAKE (terminal)
-% The nurse runs  ?- start.  and answers the questions for the patient.
-% At the end the patient is saved to the intake file that the C triage
-% program reads (see docs/INTAKE_FILE_FORMAT.md).
+% The symptom checker the nurse uses at the hospital entrance.
 %
-% Order of the questions, like at a real hospital entrance:
-%   1. Emergency check first. If anything is ticked, save as EMERGENCY now.
-%   2. Patient details.
-%   3. Main problem area, then yes/no symptom questions picked by triage.pl.
-%   4. Confusion, pain score and vital signs (vital signs may be skipped).
+% How to run (from the project root folder):
+%   swipl private/intake.pl
+%   ?- start.
+%
+% Steps:
+%   1. Emergency check. If the patient has an emergency sign, save them
+%      right away as EMERGENCY and stop asking questions.
+%   2. Patient details: name, age, sex.
+%   3. Main problem area, then the nurse picks the patient's symptoms.
+%   4. Prolog shows the possible conditions (initial diagnosis).
+%   5. Pain score and vital signs.
+%   6. Everything is saved to data/intake_records.txt for the C program.
+%
+% Prolog does NOT decide the ESI level. The C program reads the file
+% and decides it.
 
-:- use_module(library(lists)).
-:- use_module(library(readutil)).
+:- ensure_loaded(knowledge).
+:- ensure_loaded(triage).
+:- ensure_loaded(records).
+
 
 start :-
-	catch(intake,
-		 intake_cancelled,
-		(nl,
-			writeln('Intake cancelled. Nothing was saved.'))).
-
-intake :-
-	get_time(Arrived),
 	nl,
-	writeln('=== PATIENT INTAKE ==='),
+	writeln('========== PATIENT INTAKE =========='),
 	ask_emergency_signs(Signs),
-	(Signs \== [] ->
-	writeln('*** EMERGENCY - only basic details, press Enter to skip ***'),
-		ask_patient(loose, Name, Age, Sex),
-		emergency_fields(Signs, Fields),
-		Result = emergency(Signs);
-	ask_patient(strict, Name, Age, Sex),
-		ask_category(Category),
-		ask_symptoms(Category, [], Answers),
-		ask_yes_no('Is the patient confused, very sleepy, or not making sense?', Confused),
-		ask_number('Pain score 0-10', 0, 10, required, Pain),
-		writeln('Vital signs (press Enter to skip any not measured):'),
-		ask_number('  Heart rate (/min)', 20, 250, optional, HR),
-		ask_number('  Breathing rate (/min)', 4, 80, optional, RR),
-		ask_number('  SpO2 (%)',               50, 100, optional, SpO2),
-	    ask_number('Temperature(C)',        30,  45, optional, Temp),
-	    ask_number('SystolicBP(mmHg)',     40, 300, optional, BP),
-	    assess(Answers, Confused, Pain, [HR, RR, SpO2, Temp, BP], Fields, Result)
-	),
-	format_time(atom(ArrivedText), '%Y-%m-%d %H:%M:%S', Arrived),
-		save_record(['ARRIVED' - ArrivedText, 'NAME' - Name, 'AGE' - Age, 'SEX' - Sex|Fields], Id),
-			show_result(Id, Result).
+	intake(Signs).
+
+
+% intake(Signs)
+% No emergency signs: do the full intake.
+intake([]) :-
+	nl,
+	ask_name(Name),
+	ask_number('Age (years)', 0, 130, Age),
+	ask_sex(Sex),
+	ask_category(Category),
+	ask_symptoms(Category, Symptoms),
+	likely_conditions(Category, Symptoms, Matches),
+	show_conditions(Matches),
+	best_condition(Matches, Condition),
+	condition_names(Matches, Possible),
+	resource_count(Condition, Resources),
+	high_risk_answer(Symptoms, HighRisk),
+	nl,
+	ask_number('Pain score (0-10)', 0, 10, Pain),
+	writeln('Vital signs (press Enter to skip if not measured):'),
+	ask_vital('  Heart rate (beats/min)', 20, 250, HeartRate),
+	ask_vital('  Breathing rate (breaths/min)', 4, 80, RespRate),
+	ask_vital('  Oxygen level SpO2 (%)', 50, 100, SpO2),
+	save_record([
+		'NAME' - Name,
+		'AGE' - Age,
+		'SEX' - Sex,
+		'EMERGENCY' - 'NO',
+		'EMERGENCY_SIGNS' - [],
+		'CATEGORY' - Category,
+		'SYMPTOMS' - Symptoms,
+		'CONDITION' - Condition,
+		'POSSIBLE_CONDITIONS' - Possible,
+		'HIGH_RISK' - HighRisk,
+		'RESOURCES' - Resources,
+		'PAIN' - Pain,
+		'HEART_RATE' - HeartRate,
+		'RESP_RATE' - RespRate,
+		'SPO2' - SpO2
+	], Id),
+	show_saved(Id, HighRisk).
+
+% At least one emergency sign: ask only the name and save right away.
+intake(Signs) :-
+	Signs \== [],
+	nl,
+	writeln('*** EMERGENCY - bring the patient to the Emergency Room NOW ***'),
+	ask('Patient name (press Enter if unknown)', Text),
+	unknown_if_empty(Text, Name),
+	save_record([
+		'NAME' - Name,
+		'EMERGENCY' - 'YES',
+		'EMERGENCY_SIGNS' - Signs
+	], Id),
+	show_saved(Id, 'YES').
 
 
 % ---------- Questions ----------
@@ -51,260 +89,155 @@ intake :-
 ask_emergency_signs(Signs) :-
 	nl,
 	writeln('EMERGENCY CHECK - is any of these happening RIGHT NOW?'),
-	findall(Id - Label,
-		emergency_sign(Id, Label),
-		Pairs),
-	forall(nth1(N, Pairs, _ - Label),
-		format("  ~w. ~w~n", [N, Label])),
-	writeln('Type the numbers (for example 2,5), or press Enter for none.'),
-	read_answer(Text),
-	split_string(Text, ", ", ", ", Parts0),
-	exclude(empty_text, Parts0, Parts),
-	(maplist(sign_number(Pairs),
-			Parts,
-			Signs0) ->
-	list_to_set(Signs0, Signs);
-	writeln('Please type only numbers from the list.'),
-		ask_emergency_signs(Signs)).
-
-empty_text("").
-
-sign_number(Pairs, Text, Sign) :-
-	number_string(N, Text),
-	nth1(N, Pairs, Sign - _).
-
-% strict: everything required.  loose: Enter means unknown (emergencies).
-ask_patient(Mode, Name, Age, Sex) :-
-	nl,
-	ask_name(Mode, Name),
-	(Mode == strict ->
-	AgeMode = required;
-	AgeMode = optional),
-	ask_number('Age (years)', 0, 130, AgeMode, Age),
-	ask_sex(Mode, Sex).
-
-ask_name(Mode, Name) :-
-	prompt_raw('Patient name', Text),
-	(Text \== "" ->
-	atom_string(Name, Text);
-	Mode == loose ->
-	Name = 'Unknown';
-	writeln('Name is required.'),
-		ask_name(Mode, Name)).
-
-ask_sex(Mode, Sex) :-
-	prompt_line('Sex (M/F)', Text),
-	string_upper(Text, Upper),
-	(memberchk(Upper, ["M", "F"]) ->
-	atom_string(Sex, Upper);
-	Upper == "",
-		Mode == loose ->
-	Sex = 'U';
-	writeln('Please type M or F.'),
-		ask_sex(Mode, Sex)).
+	findall(Id-Label, emergency_sign(Id, Label), Items),
+	pick_from_list(Items, Signs).
 
 ask_category(Category) :-
 	nl,
 	writeln('Where is the main problem?'),
-	findall(Id - Label,
-		category(Id, Label),
-		Pairs0),
-	append(Pairs0, [all - "Not sure - check everything"], Pairs),
-	forall(nth1(N, Pairs, _ - Label),
-		format("  ~w. ~w~n", [N, Label])),
-	length(Pairs, Max),
-	ask_number('Choose', 1, Max, required, Choice),
-	nth1(Choice, Pairs, Category - _).
+	findall(Id-Label, category(Id, Label), Items),
+	show_numbered(Items),
+	length(Items, Max),
+	ask_number('Choose a number', 1, Max, Choice),
+	nth1(Choice, Items, Category-_).
 
-% Keep asking the question triage.pl picks until there is nothing left,
-% or the nurse types "done".
-ask_symptoms(Category, Answers0, Answers) :-
-	(next_question(Category, Answers0, Symptom) ->
-	readable(Symptom, Text),
-		format(atom(Question),
-			"Does the patient have ~w? (y/n/?=not sure/done)",
-			[Text]),
-		prompt_line(Question, Reply),
-		(reply_answer(Reply, Answer) ->
-	append(Answers0, [Symptom - Answer], Answers1),
-			warn_high_risk(Symptom, Answer),
-			ask_symptoms(Category, Answers1, Answers);
-	Reply == "done" ->
-	Answers = Answers0;
-	writeln('Please type y, n, ? or done.'),
-			ask_symptoms(Category, Answers0, Answers));
-	Answers = Answers0).
-
-reply_answer("y", yes).
-reply_answer("yes", yes).
-reply_answer("n", no).
-reply_answer("no", no).
-reply_answer("?", unsure).
-
-% Tell the nurse straight away, do not wait until the end.
-warn_high_risk(Symptom, yes) :-
-	high_risk_symptom(Symptom),
-	!,
-	readable(Symptom, Text),
-	format("  !! HIGH-RISK symptom: ~w - the patient should not wait.~n", [Text]).
-warn_high_risk(_, _).
-
-ask_yes_no(Question, Answer) :-
-	format(atom(Prompt),
-		"~w (y/n)",
-		[Question]),
-	prompt_line(Prompt, Reply),
-	(memberchk(Reply - Answer, ["y" - yes, "yes" - yes, "n" - no, "no" - no]) ->
-	true;
-	writeln('Please type y or n.'),
-		ask_yes_no(Question, Answer)).
-
-% ask_number(+Question, +Low, +High, +required/optional, -Value)
-% An optional number left empty becomes '' (saved as an empty field).
-ask_number(Question, Low, High, Mode, Value) :-
-	prompt_line(Question, Text),
-	(Text == "",
-		Mode == optional ->
-	Value = '';
-	catch(number_string(Value0, Text),
-			_,
-			fail),
-		Value0 >= Low,
-		Value0 =< High ->
-	Value = Value0;
-	format("Please type a number from ~w to ~w.~n", [Low, High]),
-		ask_number(Question, Low, High, Mode, Value)).
-
-% prompt_line gives lower-case text for matching answers;
-% prompt_raw keeps the case as typed (for names).
-prompt_line(Question, Text) :-
-	prompt_raw(Question, Raw),
-	string_lower(Raw, Text).
-
-prompt_raw(Question, Text) :-
-	format("~w: ", [Question]),
-	read_raw(Text).
-
-read_answer(Text) :-
-	read_raw(Raw),
-	string_lower(Raw, Text).
-
-% Reads one line with extra spaces removed.
-% End of input (Ctrl+Z / Ctrl+D) cancels the intake.
-read_raw(Text) :-
-	read_line_to_string(user_input, Line),
-	(Line == end_of_file ->
-	throw(intake_cancelled);
-	normalize_space(string(Text),
-			Line)).
-
-readable(Symptom, Text) :-
-	atomic_list_concat(Parts, '_', Symptom),
-	atomic_list_concat(Parts, ' ', Text).
-
-
-% ---------- Result ----------
-
-emergency_fields(Signs, Fields) :-
-	Fields = [
-		'EMERGENCY' - 'YES',
-		'EMERGENCY_SIGNS' - Signs,
-		'CATEGORY' - '',
-		'SYMPTOMS_YES' - [],
-		'SYMPTOMS_NO' - [],
-		'CONFUSED' - '',
-		'PAIN' - '',
-		'HEART_RATE' - '',
-		'RESP_RATE' - '',
-		'SPO2' - '',
-		'TEMP_C' - '',
-		'SYSTOLIC_BP' - '',
-		'HIGH_RISK' - 'YES',
-		'HIGH_RISK_REASONS' - [],
-		'LIKELY_CONDITIONS' - [],
-		'RESOURCES' - [],
-		'RESOURCE_COUNT' - ''].
-
-% assess(+Answers, +Confused, +Pain, +Vitals, -Fields, -Result)
-% Works out likely conditions, risk and resources, and the record fields.
-assess(Answers, Confused, Pain, [HR, RR, SpO2, Temp, BP], Fields, Result) :-
-	likely_conditions(all, Answers, Matches),
-	high_risk_reasons(Answers, Matches, Confused, Pain, Reasons),
-	expected_resources(Matches, Resources),
-	% No match means the resources are unknown, so leave the count empty.
-	(Matches == [] ->
-	ResourceCount = '';
-	length(Resources, ResourceCount)),
-	% The category is the one of the best match.
-	(Matches = [match(Best, _, _)|_] ->
-	condition(Best, Category, _);
-	Category = unknown),
-	(Reasons == [] ->
-	HighRisk = 'NO';
-	HighRisk = 'YES'),
-	findall(S,
-		member(S - yes, Answers),
-		Yes),
-	findall(S,
-		member(S - no, Answers),
-		No),
-	findall(Text,
-		(member(match(C, Y, T),
-				Matches),
-			format(atom(Text),
-				"~w:~w/~w",
-				[C, Y, T])),
-		MatchTexts),
-	upcase_atom(Confused, ConfusedText),
-	Fields = [
-		'EMERGENCY' - 'NO',
-		'EMERGENCY_SIGNS' - [],
-		'CATEGORY' - Category,
-		'SYMPTOMS_YES' - Yes,
-		'SYMPTOMS_NO' - No,
-		'CONFUSED' - ConfusedText,
-		'PAIN' - Pain,
-		'HEART_RATE' - HR,
-		'RESP_RATE' - RR,
-		'SPO2' - SpO2,
-		'TEMP_C' - Temp,
-		'SYSTOLIC_BP' - BP,
-		'HIGH_RISK' - HighRisk,
-		'HIGH_RISK_REASONS' - Reasons,
-		'LIKELY_CONDITIONS' - MatchTexts,
-		'RESOURCES' - Resources,
-		'RESOURCE_COUNT' - ResourceCount],
-	Result = normal(HighRisk, Reasons, Matches).
-
-show_result(Id, Result) :-
+ask_symptoms(Category, Symptoms) :-
 	nl,
-	writeln('=================================================='),
-	format("PATIENT NUMBER: ~w~n", [Id]),
-	show_status(Result),
-		intake_file(File),
-	format("Saved to ~w~n", [File]),
-	writeln('==================================================').
+	writeln('Which symptoms does the patient have?'),
+	category_symptoms(Category, Ids),
+	findall(Id-Label, (member(Id, Ids), readable(Id, Label)), Items),
+	pick_from_list(Items, Symptoms).
 
-show_status(emergency(Signs)) :-
-	writeln('STATUS: EMERGENCY - take the patient to the Emergency Room NOW'),
-	findall(L,
-		(member(S, Signs),
-			emergency_sign(S, L)),
-		Labels),
-	atomic_list_concat(Labels, ', ', Text),
-	format("Signs: ~w~n", [Text]).
-show_status(normal(HighRisk, Reasons, Matches)) :-
-	(HighRisk == 'YES' ->
-	writeln('STATUS: HIGH RISK - the triage nurse must see this patient immediately'),
-		maplist(readable, Reasons, ReasonTexts),
-		atomic_list_concat(ReasonTexts, ', ', Text),
-		format("Reasons: ~w~n", [Text]);
-	writeln('STATUS: Please wait - the patient will be called for triage')),
-	(Matches == [] ->
-	writeln('No condition matched. A nurse will assess the patient.');
-	writeln('Possible conditions:'),
-		forall(nth1(N,
-				Matches,
-				match(C, Y, T)),
-			(readable(C, Name),
-				format("  ~w. ~w (~w of ~w symptoms)~n", [N, Name, Y, T])))).
+% ask_name(Name): the name is required.
+ask_name(Name) :-
+	ask('Patient name', Name),
+	Name \== "",
+	!.
+ask_name(Name) :-
+	writeln('Name is required.'),
+	ask_name(Name).
+
+% ask_sex(Sex): M or F.
+ask_sex(Sex) :-
+	ask('Sex (M/F)', Text),
+	string_upper(Text, Upper),
+	member(Upper, ["M", "F"]),
+	!,
+	atom_string(Sex, Upper).
+ask_sex(Sex) :-
+	writeln('Please type M or F.'),
+	ask_sex(Sex).
+
+% ask_number(Question, Low, High, Number): a required number.
+ask_number(Question, Low, High, Number) :-
+	ask(Question, Text),
+	number_in_range(Text, Low, High, Number),
+	!.
+ask_number(Question, Low, High, Number) :-
+	format("Please type a number from ~w to ~w.~n", [Low, High]),
+	ask_number(Question, Low, High, Number).
+
+% ask_vital(Question, Low, High, Value): a number, or Enter to skip.
+% A skipped vital sign is saved as an empty value.
+ask_vital(Question, Low, High, Value) :-
+	ask(Question, Text),
+	vital_value(Text, Low, High, Value),
+	!.
+ask_vital(Question, Low, High, Value) :-
+	format("Please type a number from ~w to ~w, or press Enter to skip.~n", [Low, High]),
+	ask_vital(Question, Low, High, Value).
+
+vital_value("", _, _, '').
+vital_value(Text, Low, High, Number) :-
+	number_in_range(Text, Low, High, Number).
+
+number_in_range(Text, Low, High, Number) :-
+	number_string(Number, Text),
+	Number >= Low,
+	Number =< High.
+
+
+% pick_from_list(Items, Picked)
+% Items is a list of Id-Label pairs. Shows them numbered 1, 2, 3...
+% The nurse types the numbers separated by commas (for example 2,5),
+% or presses Enter for none. Picked is the list of chosen Ids.
+pick_from_list(Items, Picked) :-
+	show_numbered(Items),
+	ask('Type the numbers (example: 1,4) or press Enter for none', Text),
+	numbers_to_ids(Text, Items, Picked),
+	!.
+pick_from_list(Items, Picked) :-
+	writeln('Please type only numbers from the list.'),
+	pick_from_list(Items, Picked).
+
+numbers_to_ids(Text, Items, Ids) :-
+	split_string(Text, ",", " ", Parts),
+	delete(Parts, "", Numbers),
+	maplist(number_to_id(Items), Numbers, AllIds),
+	list_to_set(AllIds, Ids).	% removes repeats, like 2,2
+
+number_to_id(Items, Text, Id) :-
+	number_string(N, Text),
+	nth1(N, Items, Id-_).
+
+
+% ---------- Small helpers ----------
+
+% ask(Question, Text): show the question and read one line.
+ask(Question, Text) :-
+	format("~w: ", [Question]),
+	read_line_to_string(user_input, Line),
+	clean_line(Line, Text).
+
+% clean_line(Line, Text): removes extra spaces.
+% End of input (Ctrl+Z or Ctrl+D) is treated as an empty answer.
+clean_line(end_of_file, "") :- !.
+clean_line(Line, Text) :-
+	normalize_space(string(Text), Line).
+
+unknown_if_empty("", 'Unknown') :- !.
+unknown_if_empty(Text, Text).
+
+% high_risk_answer(Symptoms, Answer): 'YES' or 'NO' for the file.
+high_risk_answer(Symptoms, 'YES') :-
+	high_risk(Symptoms),
+	!.
+high_risk_answer(_, 'NO').
+
+% readable(Id, Text): shortness_of_breath -> shortness of breath
+readable(Id, Text) :-
+	atomic_list_concat(Words, '_', Id),
+	atomic_list_concat(Words, ' ', Text).
+
+% show_numbered(Items): prints Id-Label pairs as a numbered list.
+show_numbered(Items) :-
+	forall(nth1(N, Items, _-Label),
+		format("  ~w. ~w~n", [N, Label])).
+
+
+% ---------- Results on screen ----------
+
+show_conditions([]) :-
+	nl,
+	writeln('No condition matched. A nurse will assess the patient.').
+show_conditions(Matches) :-
+	Matches \== [],
+	nl,
+	writeln('Possible conditions (initial diagnosis):'),
+	forall(member(Count-Condition, Matches),
+		show_condition(Count, Condition)).
+
+show_condition(Count, Condition) :-
+	condition(Condition, _, Symptoms),
+	length(Symptoms, Total),
+	readable(Condition, Name),
+	format("  - ~w (~w of ~w symptoms)~n", [Name, Count, Total]).
+
+show_saved(Id, HighRisk) :-
+	intake_file(File),
+	nl,
+	writeln('===================================='),
+	format("Patient number: ~w~n", [Id]),
+	format("High risk: ~w~n", [HighRisk]),
+	format("Saved to ~w for the C triage program.~n", [File]),
+	writeln('====================================').
