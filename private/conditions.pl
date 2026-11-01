@@ -173,23 +173,6 @@ start :-
 	nl,
 	write('3. Body'),
 	nl,
-<<<<<<< HEAD:private/server.pl
-	read(Choice),
-	pick_category(Choice).
-
-% If the number is valid, ask questions and show results.
-% Otherwise (the part after ';'), show an error message.
-pick_category(Choice) :-
-    (   choice(Choice, Category)
-    ->  write('You picked: '), write(Category), 
-		nl, 
-		nl,
-        category_symptoms(Category, Symptoms),
-        ask_all(Symptoms),
-        show_results(Category)
-    ;   write('Invalid choice. Please type start. and try again.'), nl
-    ).
-=======
 	read_line_to_string(user_input, Raw),
 	(	catch(number_string(Choice, Raw), _, fail),
 		choice(Choice, Category)
@@ -202,7 +185,6 @@ pick_category(Choice) :-
 		nl,
 		start
 	).
->>>>>>> main:private/conditions.pl
 
 % Ask about a symptom and record the answer.
 % Re-prompts if the user types anything other than yes or no.
@@ -248,70 +230,4 @@ choice(3, body).
 % Checks if a condition has a symptom.
 has_symptom(Condition, Symptom) :-
 	condition(Condition, Symptoms),
-<<<<<<< HEAD:private/server.pl
 	member(Symptom, Symptoms).
-
-%all symptoms that appear in a category (no duplicates)
-category_symptoms(Category, Symptoms) :-
-	findall(S, (in_category(D, Category), has_symptom(D, S)), AllSymptoms). 
-	sort(AllSymptoms, Symptoms). 
-
-%true if Symptom is in the diseases list.
-has_symptom(Disease, Symptom) :-
-    condition(Disease, SymptomList),
-    member(Symptom, SymptomList).
-
-%ask about each symptom, one by one
-ask_symptoms([]).
-ask_symptoms([First | Rest]) :-
-	ask(First), 
-	ask_symptoms(Rest). 
-
-ask(Symptom) :- 
-	format('Do you have '), write(Symptom), write('? (yes. or no.): '),
-	read(Reply),
-	( member(Reply, [yes, no])
-	-> 	assert(answer (Symptom, Reply))
-	; 	write('Please type yes. or no. '),
-		nl,
-		ask(Symptom)
-	). 
-
-%Count how many symptoms of a disease the user said "yes" to.
-count_matches(Disease, Count) :-
-		condition(Disease, DiseaseSymptoms), 
-		findall(S, (member(S, DiseaseSymptoms), answer(S, yes)), Matched),
-		length(Matched, Count).
-
-%user said yes to a symptom, but a disease does not have it
-missing_symptom(Disease) :-
-	answer(Symptom, yes), 
-	\+ has_symptom(Disease, Symptom).
-
-%user said not to a symptom, but the disease has it
-denied_symptom(Disease) :-
-	answer(Symptom, no),
-	has_symptom(Disease, Symptom). 
-
-show_results(Category) :-
-    nl,
-    write('Possible conditions:'), nl,
-    forall(in_category(Disease, Category), show_one(Disease)),
-    nl,
-    write('Note: this is NOT a medical diagnosis. Please see a doctor.'), 
-	nl.
-
-show_one(Disease) :-
-    count_matches(Disease, Count),
-    condition(Disease, SymptomList),
-    length(SymptomList, Total),
-    (   Count > 0
-    ->  write('  - '), write(Disease),
-        write(': '), write(Count), write(' of '), write(Total),
-        write(' symptoms matched'), nl
-    ;   true                         % no match: print nothing
-    ).
-
-=======
-	member(Symptom, Symptoms).
->>>>>>> main:private/conditions.pl
