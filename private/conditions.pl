@@ -1,0 +1,317 @@
+:- dynamic answer/2.
+
+% ==========================================
+% FACTS: CATEGORIES
+% Conditions divided into three categories: Fever, Stomach, Body
+% ==========================================
+
+% Fever - 21
+in_category(influenza, fever).
+in_category(measles, fever).
+in_category(covid_19, fever).
+in_category(acute_respiratory_infection, fever).
+in_category(pneumonia, fever).
+in_category(acute_bronchitis, fever).
+in_category(chronic_lower_respiratory_disease, fever).
+in_category(tuberculosis, fever).
+in_category(pertussis, fever).
+in_category(extrapulmonary_tuberculosis, fever).
+in_category(hiv, fever).
+in_category(diphtheria, fever).
+in_category(malaria, fever).
+in_category(dengue, fever).
+in_category(leptospirosis, fever).
+in_category(chikungunya, fever).
+in_category(typhoid_fever, fever).
+in_category(meningitis, fever).
+in_category(meningococcemia, fever).
+in_category(sepsis, fever).
+in_category(rheumatic_fever, fever).
+
+% Stomach - 22
+in_category(diarrhea, stomach).
+in_category(cholera, stomach).
+in_category(dysentery, stomach).
+in_category(schistosomiasis, stomach).
+in_category(appendicitis, stomach).
+in_category(acute_pancreatitis, stomach).
+in_category(gastric_ulcer, stomach).
+in_category(cirrhosis, stomach).
+in_category(hepatitis_a, stomach).
+in_category(hepatitis_b, stomach).
+in_category(hepatitis_c, stomach).
+in_category(urinary_tract_infection, stomach).
+in_category(kidney_infection, stomach).
+in_category(chronic_kidney_disease, stomach).
+in_category(glomerulonephritis, stomach).
+in_category(cellulitis, stomach).
+in_category(dermatitis, stomach).
+in_category(chickenpox, stomach).
+in_category(mpox, stomach).
+in_category(hand_foot_mouth_disease, stomach).
+in_category(leprosy, stomach).
+in_category(sore_eyes, stomach).
+
+% Body - 17
+in_category(atherosclerosis, body).
+in_category(ischemic_heart_disease, body).
+in_category(stroke, body).
+in_category(hypertension, body).
+in_category(diabetes, body).
+in_category(heart_failure, body).
+in_category(deep_vein_thrombosis, body).
+in_category(anemia, body).
+in_category(cancer, body).
+in_category(malnutrition, body).
+in_category(epilepsy, body).
+in_category(tetanus, body).
+in_category(rabies, body).
+in_category(arthritis, body).
+in_category(depression, body).
+in_category(schizophrenia, body).
+in_category(alzheimers, body).
+
+% ==========================================
+% FACTS: CONDITIONS & SYMPTOMS
+% ==========================================
+
+% FEVER CONDITIONS
+% Subset chain 1: influenza -> measles
+condition(influenza, [fever, cough, runny_nose]).
+condition(measles, [fever, cough, runny_nose, red_eyes, rash]).
+
+condition(covid_19, [fever, cough, sore_throat, loss_of_smell]).
+
+% Subset chain 2: acute_respiratory_infection -> pneumonia
+condition(acute_respiratory_infection, [fever, cough, fast_breathing]).
+condition(pneumonia, [fever, cough, fast_breathing, phlegm, shortness_of_breath, chest_pain]).
+
+condition(acute_bronchitis, [cough, phlegm, wheeze, sore_throat]).
+condition(chronic_lower_respiratory_disease, [shortness_of_breath, wheeze, chest_tightness]).
+condition(tuberculosis, [cough, chronic_cough, fever, weight_loss]).
+condition(pertussis, [cough, chronic_cough, coughing_fits, vomiting]).
+
+% Subset chain 3: hiv -> extrapulmonary_tuberculosis (if rash is replaced or extended)
+condition(extrapulmonary_tuberculosis, [fever, swollen_glands, night_sweats, weight_loss]).
+condition(hiv, [fever, swollen_glands, weight_loss, rash]).
+condition(diphtheria, [fever, sore_throat, swollen_glands, grey_throat_membrane]).
+
+% Subset chain 4 (3-tier): malaria -> dengue -> leptospirosis
+condition(malaria, [fever, chills, headache]).
+condition(dengue, [fever, chills, headache, pain_behind_eyes, muscle_pain]).
+condition(leptospirosis, [fever, chills, headache, pain_behind_eyes, muscle_pain, calf_pain]).
+
+condition(chikungunya, [fever, joint_pain, rash]).
+condition(typhoid_fever, [fever, headache, abdominal_pain, loss_of_appetite]).
+condition(meningitis, [fever, headache, neck_stiffness, vomiting]).
+condition(meningococcemia, [fever, rash, bruising, neck_stiffness]).
+condition(sepsis, [fever, fast_heartbeat, fast_breathing, confusion]).
+condition(rheumatic_fever, [fever, joint_pain, joint_swelling, chest_pain]).
+
+% STOMACH CONDITIONS
+% Subset chain 5: diarrhea -> cholera
+condition(diarrhea, [diarrhea, vomiting, abdominal_cramps]).
+condition(cholera, [diarrhea, vomiting, abdominal_cramps, sunken_eyes, dry_skin]).
+
+condition(dysentery, [diarrhea, abdominal_cramps, blood_in_stool, fever]).
+condition(schistosomiasis, [diarrhea, abdominal_pain, blood_in_stool, itching]).
+condition(appendicitis, [abdominal_pain, fever, nausea, loss_of_appetite]).
+condition(acute_pancreatitis, [abdominal_pain, back_pain, nausea, vomiting]).
+condition(gastric_ulcer, [abdominal_pain, nausea, heartburn, bloating]).
+condition(cirrhosis, [jaundice, swollen_abdomen, bruising, itching]).
+condition(hepatitis_a, [fever, loss_of_appetite, dark_urine, jaundice]).
+
+% Subset chain 6: hepatitis_b -> hepatitis_c
+condition(hepatitis_b, [nausea, dark_urine, pale_stools, jaundice]).
+condition(hepatitis_c, [nausea, dark_urine, pale_stools, jaundice, abdominal_pain]).
+
+condition(urinary_tract_infection, [painful_urination, frequent_urination, lower_abdominal_pain, cloudy_urine]).
+condition(kidney_infection, [fever, back_pain, painful_urination, nausea]).
+condition(chronic_kidney_disease, [ankle_swelling, nausea, blood_in_urine]).
+condition(glomerulonephritis, [blood_in_urine, facial_swelling, ankle_swelling]).
+condition(cellulitis, [red_skin, swelling, skin_pain, fever]).
+condition(dermatitis, [itching, dry_skin, red_skin, cracked_skin]).
+condition(chickenpox, [fever, rash, blisters, itching]).
+condition(mpox, [fever, rash, blisters, swollen_glands]).
+condition(hand_foot_mouth_disease, [fever, rash, mouth_ulcer, hand_foot_blisters]).
+condition(leprosy, [pale_skin_patches, numbness, muscle_weakness]).
+condition(sore_eyes, [red_eyes, itchy_eyes, watery_eyes]).
+
+% BODY CONDITIONS
+% Subset chain 7: atherosclerosis -> ischemic_heart_disease
+condition(atherosclerosis, [chest_pain, leg_pain, numbness]).
+condition(ischemic_heart_disease, [chest_pain, leg_pain, numbness, shortness_of_breath, sweating, nausea]).
+
+condition(stroke, [face_drooping, arm_weakness, speech_difficulty]).
+condition(hypertension, [headache, dizziness, blurred_vision]).
+condition(diabetes, [thirst, frequent_urination, blurred_vision]).
+condition(heart_failure, [shortness_of_breath, ankle_swelling, palpitations]).
+condition(deep_vein_thrombosis, [leg_pain, leg_swelling, warm_skin, red_skin]).
+condition(anemia, [pale_skin, dizziness, palpitations]).
+condition(cancer, [weight_loss, loss_of_appetite, painless_lump]).
+condition(malnutrition, [weight_loss, low_weight, muscle_weakness]).
+condition(epilepsy, [seizures, jerking, loss_of_awareness]).
+condition(tetanus, [muscle_stiffness, muscle_spasm, lockjaw, difficulty_swallowing]).
+condition(rabies, [fever, numbness, muscle_spasm, fear_of_water]).
+condition(arthritis, [joint_pain, joint_stiffness, joint_swelling, morning_stiffness]).
+condition(depression, [low_mood, loss_of_interest, sleep_problems, hopelessness]).
+condition(schizophrenia, [hallucinations, delusions, disordered_thinking, social_withdrawal]).
+condition(alzheimers, [memory_loss, confusion, language_problems, mood_changes]).
+
+% ==========================================
+% RULES
+% ==========================================
+
+% Main entry point for the diagnostic system.
+start :-
+	retractall(answer(_, _)),
+	write('Choose category, type the number only'),
+	nl,
+	write('1. Fever'),
+	nl,
+	write('2. Stomach'),
+	nl,
+	write('3. Body'),
+	nl,
+<<<<<<< HEAD:private/server.pl
+	read(Choice),
+	pick_category(Choice).
+
+% If the number is valid, ask questions and show results.
+% Otherwise (the part after ';'), show an error message.
+pick_category(Choice) :-
+    (   choice(Choice, Category)
+    ->  write('You picked: '), write(Category), 
+		nl, 
+		nl,
+        category_symptoms(Category, Symptoms),
+        ask_all(Symptoms),
+        show_results(Category)
+    ;   write('Invalid choice. Please type start. and try again.'), nl
+    ).
+=======
+	read_line_to_string(user_input, Raw),
+	(	catch(number_string(Choice, Raw), _, fail),
+		choice(Choice, Category)
+	->	write('You picked: '),
+		write(Category),
+		nl,
+		ask_all(Category),
+		nl
+	;	write('Invalid input. Try again.'),
+		nl,
+		start
+	).
+>>>>>>> main:private/conditions.pl
+
+% Ask about a symptom and record the answer.
+% Re-prompts if the user types anything other than yes or no.
+ask(Symptom, Category) :-
+	has_symptom(Condition, Symptom),
+	candidate(Condition, Category),
+	\+ answer(Symptom, _),
+	repeat,
+	format("Do you have ~w? (yes/no): ", [Symptom]),
+	read_line_to_string(user_input, Raw),
+	string_lower(Raw, Lower),
+	atom_string(Answer, Lower),
+	(	(Answer == yes ; Answer == no)
+	->	assertz(answer(Symptom, Answer)), !
+	;	write('Invalid input. Please enter yes or no.'),
+		nl,
+		fail
+	).
+
+% Ask about all relevant symptoms in a category and output the final diagnosis.
+ask_all(Category) :-
+	(	ask(_, Category)
+	->	ask_all(Category)
+	;	candidate(Condition, Category)
+	->	format("Most likely condition is: ~w", [Condition]),
+		nl
+	;	write("Condition is unknown. Please visit a doctor immediately!"),
+		nl
+	).
+
+% Determine if a condition is a candidate for the given category based on the user's answers.
+candidate(Condition, Category) :-
+	in_category(Condition, Category),
+	\+ (answer(Symptom, yes),
+		\+ has_symptom(Condition, Symptom)),
+	\+ (answer(Symptom, no),
+		has_symptom(Condition, Symptom)).
+
+choice(1, fever).
+choice(2, stomach).
+choice(3, body).
+
+% Checks if a condition has a symptom.
+has_symptom(Condition, Symptom) :-
+	condition(Condition, Symptoms),
+<<<<<<< HEAD:private/server.pl
+	member(Symptom, Symptoms).
+
+%all symptoms that appear in a category (no duplicates)
+category_symptoms(Category, Symptoms) :-
+	findall(S, (in_category(D, Category), has_symptom(D, S)), AllSymptoms). 
+	sort(AllSymptoms, Symptoms). 
+
+%true if Symptom is in the diseases list.
+has_symptom(Disease, Symptom) :-
+    condition(Disease, SymptomList),
+    member(Symptom, SymptomList).
+
+%ask about each symptom, one by one
+ask_symptoms([]).
+ask_symptoms([First | Rest]) :-
+	ask(First), 
+	ask_symptoms(Rest). 
+
+ask(Symptom) :- 
+	format('Do you have '), write(Symptom), write('? (yes. or no.): '),
+	read(Reply),
+	( member(Reply, [yes, no])
+	-> 	assert(answer (Symptom, Reply))
+	; 	write('Please type yes. or no. '),
+		nl,
+		ask(Symptom)
+	). 
+
+%Count how many symptoms of a disease the user said "yes" to.
+count_matches(Disease, Count) :-
+		condition(Disease, DiseaseSymptoms), 
+		findall(S, (member(S, DiseaseSymptoms), answer(S, yes)), Matched),
+		length(Matched, Count).
+
+%user said yes to a symptom, but a disease does not have it
+missing_symptom(Disease) :-
+	answer(Symptom, yes), 
+	\+ has_symptom(Disease, Symptom).
+
+%user said not to a symptom, but the disease has it
+denied_symptom(Disease) :-
+	answer(Symptom, no),
+	has_symptom(Disease, Symptom). 
+
+show_results(Category) :-
+    nl,
+    write('Possible conditions:'), nl,
+    forall(in_category(Disease, Category), show_one(Disease)),
+    nl,
+    write('Note: this is NOT a medical diagnosis. Please see a doctor.'), 
+	nl.
+
+show_one(Disease) :-
+    count_matches(Disease, Count),
+    condition(Disease, SymptomList),
+    length(SymptomList, Total),
+    (   Count > 0
+    ->  write('  - '), write(Disease),
+        write(': '), write(Count), write(' of '), write(Total),
+        write(' symptoms matched'), nl
+    ;   true                         % no match: print nothing
+    ).
+
+=======
+	member(Symptom, Symptoms).
+>>>>>>> main:private/conditions.pl

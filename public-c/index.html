@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hospital Triage System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div>
+      <h1>Hospital Triage System</h1>
+      <p>Patients wait in one queue ordered by priority, then by arrival. The hospital has 5 beds. The next patient is admitted from the top of the queue.</p>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Hospital occupancy">
+    <div class="stat"><span class="label">Beds in use</span><b id="st-beds">0<small> / 5</small></b><div class="ticks" id="st-ticks"></div></div>
+    <div class="stat"><span class="label">Waiting</span><b id="st-wait">0</b></div>
+    <div class="stat"><span class="label">Discharged</span><b id="st-dis">0</b></div>
+  </section>
+
+  <div class="sample" id="sample-note">
+    <span>The board is showing example patients so you can try it out.</span>
+    <button class="btn ghost small" id="clear-btn" type="button">Clear the board</button>
+  </div>
+
+  <main class="board">
+    <section class="col" aria-labelledby="qh">
+      <div class="coltop">
+        <h2 id="qh">Waiting queue<span id="q-count"></span></h2>
+        <button class="btn" id="admit-btn" type="button">Admit next patient</button>
+      </div>
+      <ol class="sheet" id="queue"></ol>
+    </section>
+
+    <section class="col" aria-labelledby="bh">
+      <div class="coltop"><h2 id="bh">Beds</h2></div>
+      <ul class="sheet" id="beds"></ul>
+    </section>
+  </main>
+
+  <section class="tools" aria-label="Patient tools">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="t-imp" aria-controls="p-imp" aria-selected="true" data-tab="imp">Import from Prolog</button>
+      <button class="tab" role="tab" id="t-add" aria-controls="p-add" aria-selected="false" data-tab="add">Add patient</button>
+      <button class="tab" role="tab" id="t-sea" aria-controls="p-sea" aria-selected="false" data-tab="sea">Search</button>
+    </div>
+
+    <!-- Menu 2: Import patient (Prolog file). One patient per file; the name comes from the file. -->
+    <div class="panel" id="p-imp" role="tabpanel" aria-labelledby="t-imp">
+      <div class="cols2">
+        <div class="field">
+          <label class="label" for="i-file">Prolog export file (.txt)</label>
+          <input type="file" id="i-file" accept=".txt,text/plain">
+          <label class="label" for="i-text" style="margin-top:10px">File contents</label>
+          <textarea id="i-text" rows="10" spellcheck="false" placeholder="NAME=Maria Santos&#10;ID=PL-014&#10;CATEGORY=infectious&#10;LIKELY=meningitis&#10;SYMPTOMS=fever,stiff_neck,headache"></textarea>
+          <div><button class="btn ghost small" id="i-example" type="button">Load an example file</button></div>
+          <p class="hint">The file holds one patient as KEY=VALUE lines: NAME, ID, CATEGORY, LIKELY, SYMPTOMS (comma separated). The name, symptoms and condition all come from Prolog.</p>
+        </div>
+        <div class="field">
+          <span class="label">Patient found in the file</span>
+          <div class="found" id="i-parsed" aria-live="polite"></div>
+          <div><button class="btn" id="i-submit" type="button">Import patient</button></div>
+        </div>
+      </div>
+      <p class="hint">Likely conditions that count as a Critical emergency: <span class="mono" id="emerg-list"></span>.</p>
+    </div>
+
+    <!-- Menu 1: Add patient (manual) -->
+    <div class="panel" id="p-add" role="tabpanel" aria-labelledby="t-add" hidden>
+      <div class="cols2">
+        <div class="field">
+          <label class="label" for="a-name">Patient name</label>
+          <input type="text" id="a-name" maxlength="49" autocomplete="off" placeholder="Full name">
+          <label class="label" for="a-sym" style="margin-top:10px">Symptoms (up to 10)</label>
+          <div class="row">
+            <input type="text" id="a-sym" maxlength="29" autocomplete="off" placeholder="e.g. chest pain">
+            <button class="btn ghost small" id="a-sym-add" type="button">Add</button>
+          </div>
+          <div class="chips" id="a-chips"></div>
+        </div>
+        <div class="field">
+          <span class="label">Visible conditions (up to 5)</span>
+          <div class="vis" id="a-vis"></div>
+          <div class="preview" id="a-preview" aria-live="polite"></div>
+          <div><button class="btn" id="a-submit" type="button">Add to waiting queue</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu 6: Search patient by name -->
+    <div class="panel" id="p-sea" role="tabpanel" aria-labelledby="t-sea" hidden>
+      <div class="field" style="max-width:420px">
+        <label class="label" for="s-q">Search patient by name</label>
+        <input type="text" id="s-q" autocomplete="off" placeholder="Part of a name, any case">
+      </div>
+      <div class="hits" id="s-results" aria-live="polite"></div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><div id="toast-msg"></div></div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guided Health Symptom Checker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- PAGE 1: GUIDED QUESTIONING WORKSPACE -->
+  <main id="triage-page" class="page-view active">
+
+    <!-- GOOGLE APP BAR -->
+    <header class="app-bar">
+      <div class="pl-status-bar">
+        <div id="pl-status-pill" class="pl-status-pill">Loading Knowledge Base...</div>
+        <label class="pl-file-label">
+          Load .pl File
+          <input type="file" id="pl-file-input" accept=".pl" style="display: none;" />
+        </label>
+      </div>
+
+      <div id="init-progress-container" class="init-progress">
+        <div class="init-progress-labels">
+          <span id="init-progress-text">Initializing Engine...</span>
+          <span id="init-progress-percent">0%</span>
+        </div>
+        <div class="init-progress-track">
+          <div id="init-progress-bar" class="init-progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        ⚠ This is not a medical diagnosis. Please see a doctor.
+      </div>
+    </header>
+
+    <!-- MAIN 2-COLUMN WORKSPACE -->
+    <div class="main-grid">
+
+      <!-- LEFT COLUMN: TOP (CATEGORY / YES-NO PROMPT) + BOTTOM (CANDIDATE VIEW) -->
+      <div class="left-column">
+
+        <!-- TOP-LEFT: STEP 1 CATEGORY PICKER OR STEP 2 YES/NO QUESTION -->
+        <section class="card interaction-card">
+          <div id="category-step-view" class="step-view-container">
+            <div class="card-header">
+              <h1 class="section-title">Step 1: Choose a Symptom Category</h1>
+              <p class="section-subtitle">Select where your main problem is, or choose Extended Questioning to check all conditions.</p>
+            </div>
+
+            <div class="category-choice-grid">
+              <button class="category-card-btn" data-cat="fever" disabled>
+                <span class="cat-number">Option 1</span>
+                <span class="cat-name">Fever</span>
+                <span class="cat-desc">Fever, cough, breathing, colds, headache, or infections</span>
+              </button>
+
+              <button class="category-card-btn" data-cat="stomach" disabled>
+                <span class="cat-number">Option 2</span>
+                <span class="cat-name">Stomach</span>
+                <span class="cat-desc">Stomach pain, diarrhea, nausea, urination, skin, or eyes</span>
+              </button>
+
+              <button class="category-card-btn" data-cat="body" disabled>
+                <span class="cat-number">Option 3</span>
+                <span class="cat-name">Body</span>
+                <span class="cat-desc">Chest pain, heart, joints, weakness, nerves, or mood</span>
+              </button>
+
+              <button class="category-card-btn extended-card" data-cat="extended" disabled>
+                <span class="cat-number extended-badge">Option 4 • Complete Check</span>
+                <span class="cat-name">Extended Questioning (Ask All)</span>
+                <span class="cat-desc">Queries all conditions across Fever, Stomach, and Body together.</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Yes/No Question Screen -->
+          <div id="question-step-view" class="step-view-container" style="display: none;">
+            <div class="question-box">
+              <span id="active-category-badge" class="question-category-tag">You picked: Fever</span>
+              <div id="continuing-match-banner" class="continuing-match-banner"></div>
+              <div id="question-text" class="question-prompt">Do you have fever?</div>
+
+              <div id="yes-no-controls" class="yes-no-buttons">
+                <button id="btn-answer-yes" class="btn-yes" type="button">✓ YES</button>
+                <button id="btn-answer-no" class="btn-no" type="button">✕ NO</button>
+              </div>
+
+              <div id="question-complete-banner" class="complete-banner" style="display: none;">
+                <p class="complete-text">All necessary questions have been answered!</p>
+                <button id="btn-open-confirm-main" class="btn-submit btn-complete">
+                  Review & See Diagnosis →
+                </button>
+              </div>
+
+              <div class="question-footer-controls">
+                <button id="btn-undo" class="btn-secondary" type="button" disabled>← Undo Last Answer</button>
+                <button id="btn-change-category" class="btn-secondary" type="button">Change Category / Restart</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- BOTTOM-LEFT: DYNAMIC CANDIDATE GRAPH VIEW -->
+        <section class="card candidates-card">
+          <div class="candidates-header">
+            <h2 class="section-title">Possible Conditions Remaining</h2>
+            <span id="remaining-count-badge">Waiting for category...</span>
+          </div>
+          <div id="candidates-board" class="candidates-board"></div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN: INSTRUCTIONS, PROGRESS BAR & LIVE ANSWER LOG -->
+      <aside class="card sidebar-card">
+        <div class="sidebar-top">
+          <h2 class="section-title">Your Progress</h2>
+          <div class="progress-container">
+            <div class="progress-header">
+              <span id="progress-status-text">Step 1: Pick Category</span>
+              <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-track">
+              <div id="progress-fill" class="progress-fill" style="width: 10%;"></div>
+            </div>
+          </div>
+
+          <ul class="instructions-list">
+            <li id="inst-1" class="instruction-item active">1. Pick a category</li>
+            <li id="inst-2" class="instruction-item">2. Tap YES or NO</li>
+            <li id="inst-3" class="instruction-item">3. Confirm & view result</li>
+          </ul>
+        </div>
+
+        <div class="sidebar-middle">
+          <h3 class="section-title history-title">
+            Your Answers So Far (<span id="answers-count">0</span>)
+          </h3>
+          <div id="answer-history-list" class="answer-history-list">
+            <div class="empty-history">No questions answered yet.</div>
+          </div>
+        </div>
+
+        <button id="btn-sidebar-finish" class="btn-submit" disabled>
+          Confirm Answers & Finish →
+        </button>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- CONFIRMATION MODAL -->
+  <div id="confirm-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h2 class="section-title">Confirm Your Symptoms</h2>
+      <p class="section-subtitle">
+        Please confirm that all the symptoms you have are listed accurately below before viewing your result:
+      </p>
+
+      <div id="modal-review-box" class="modal-review-box"></div>
+
+      <div class="modal-actions">
+        <button id="btn-modal-back" class="btn-secondary">← Go Back & Change Answers</button>
+        <button id="btn-modal-confirm" class="btn-submit btn-complete">Yes, Show My Diagnosis</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: SEPARATE DIAGNOSTIC RESULTS PAGE -->
+  <section id="results-page" class="page-view">
+    <div class="results-container">
+      <div class="results-header">
+        <div class="results-actions">
+          <button id="btn-results-back" class="btn-secondary">← Back to Questions</button>
+          <button id="btn-results-restart" class="btn-secondary btn-danger-outline">Start New Check</button>
+        </div>
+        <p class="results-warning">⚠ This is not a medical diagnosis. Please see a doctor.</p>
+      </div>
+
+      <div class="results-grid">
+        <div id="primary-result-container"></div>
+        <div id="fallback-result-container"></div>
+      </div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

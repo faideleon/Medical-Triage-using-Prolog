@@ -151,7 +151,7 @@ start :-
 	pick_category(Choice).
 
 % If the number is valid, ask questions and show results.
-% Otherwise (the part after ';'), show an error message.
+% Otherwise, show an error message.
 pick_category(Choice) :-
     (   choice(Choice, Category)
     ->  write('You picked: '), write(Category), 
