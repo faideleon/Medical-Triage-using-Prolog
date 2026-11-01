@@ -11,6 +11,7 @@
    ```
    swipl private/server.pl
    ```
+   (Another port: `swipl private/server.pl 8080`.)
 3. Open <http://localhost:8000/> and answer the questions.
 4. Type the patient's name and age, then confirm. The patient is saved.
 5. Run the C program to read the saved patients.

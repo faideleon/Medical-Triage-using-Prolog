@@ -205,65 +205,65 @@ resources(alzheimers, [labs, imaging]).
 
 
 % DESCRIPTIONS
-% Plain-language explanation shown on the result screen.
+% Short triage note for staff, shown on the intake screen.
 % description(Name, Text).
-description(influenza, "Commonly known as the flu. It is a viral illness that causes fever, cough, and a runny nose. Resting at home and drinking plenty of water or warm fluids helps recovery.").
-description(measles, "A contagious viral illness that causes fever, cough, red watery eyes, and a widespread skin rash. Please consult a doctor and avoid close contact with others.").
-description(covid_19, "A contagious respiratory virus that commonly causes fever, cough, sore throat, and a reduced sense of smell. Rest, hydrate, and get tested if possible.").
-description(acute_respiratory_infection, "An infection in the airways or lungs causing fever, cough, and fast breathing. Because fast breathing can be serious, please have a doctor check your breathing.").
-description(pneumonia, "A serious lung infection where the air sacs fill with fluid, causing fever, cough with phlegm, chest pain, and trouble breathing. Prompt medical care is needed.").
-description(acute_bronchitis, "Swelling and mucus buildup in the main breathing tubes of the lungs, causing a cough with phlegm, wheezing, and a sore throat.").
-description(chronic_lower_respiratory_disease, "Long-term irritation of the airways (such as chronic bronchitis or asthma) causing shortness of breath, wheezing, and tightness in the chest.").
-description(tuberculosis, "A serious bacterial lung infection that causes a long-lasting cough, fever, and unexplained weight loss. A doctor can provide specific antibiotic treatment.").
-description(pertussis, "Also called whooping cough. It causes severe, repeated coughing spells that can make it hard to catch your breath or cause vomiting after coughing.").
-description(extrapulmonary_tuberculosis, "A tuberculosis infection located outside the lungs, often causing swollen lymph glands, fever, night sweats, and weight loss.").
-description(hiv, "A virus that weakens the body's immune system, which can cause ongoing fever, swollen glands, weight loss, and a skin rash. Please visit a clinic for blood testing.").
-description(diphtheria, "A serious bacterial throat infection that causes fever, sore throat, swollen neck glands, and a thick grey coating in the throat. Seek immediate medical care.").
-description(dengue, "A mosquito-borne viral illness that causes high fever, severe headache, pain behind the eyes, and body aches. Drink plenty of fluids and see a doctor promptly.").
-description(chikungunya, "A viral illness spread by mosquitoes that causes sudden fever, strong joint pain, and a skin rash.").
-description(leptospirosis, "A bacterial infection often caught from floodwater or wet soil, causing fever, headache, body aches, and pain in the calves. Antibiotic treatment from a doctor is important.").
-description(malaria, "A serious illness spread by mosquitoes in tropical areas, causing repeated waves of high fever, shaking chills, and headache.").
-description(typhoid_fever, "A bacterial infection from contaminated food or water that causes a lasting fever, headache, stomach pain, and loss of appetite.").
-description(meningitis, "A medical emergency involving swelling around the brain and spinal cord, causing fever, severe headache, vomiting, and a stiff neck. Go to a hospital immediately.").
-description(meningococcemia, "A life-threatening bloodstream infection causing fever, a stiff neck, skin rash, and dark bruising. Seek emergency hospital care right away.").
-description(sepsis, "A life-threatening medical emergency where the body reacts severely to an infection, causing fever, fast heartbeat, fast breathing, and confusion. Go to an emergency room immediately.").
-description(rheumatic_fever, "An inflammatory condition that can develop after an untreated throat infection, causing fever, painful swollen joints, and chest pain.").
-description(diarrhea, "Frequent loose or watery bowel movements with stomach cramps and vomiting. Sip clean water or oral rehydration salts frequently to prevent dehydration.").
-description(cholera, "A severe watery diarrhea illness that quickly drains the body of fluids, causing vomiting, dry skin, and sunken eyes. Immediate rehydration at a clinic is critical.").
-description(dysentery, "An intestinal infection that causes diarrhea with visible blood, stomach cramps, and fever. Please see a doctor for proper medication and hydration.").
-description(schistosomiasis, "A parasitic infection caught from freshwater exposure, causing stomach pain, diarrhea with blood, and itchy skin.").
-description(appendicitis, "Sudden inflammation of the appendix causing stomach pain, nausea, loss of appetite, and fever. Please visit a hospital promptly to check if surgery is needed.").
-description(acute_pancreatitis, "Sudden swelling of the pancreas causing strong stomach pain that spreads to the back, along with nausea and vomiting. Hospital care is recommended.").
-description(gastric_ulcer, "An open sore in the lining of the stomach that causes burning stomach pain, heartburn, bloating, and nausea.").
-description(cirrhosis, "Long-term scarring of the liver that can cause yellowing of the skin and eyes (jaundice), a swollen belly, easy bruising, and itchy skin.").
-description(hepatitis_a, "A liver infection spread through contaminated food or water, causing fever, loss of appetite, dark-colored urine, and yellow skin or eyes.").
-description(hepatitis_b, "A viral liver infection that causes nausea, dark urine, pale-colored stools, and yellowing of the skin or eyes.").
-description(hepatitis_c, "A viral infection of the liver causing stomach pain, nausea, dark urine, pale stools, and yellowing of the skin or eyes.").
-description(urinary_tract_infection, "An infection in the bladder or urinary tract causing burning or pain when urinating, frequent urination, cloudy urine, and lower belly discomfort.").
-description(kidney_infection, "A serious urinary infection that has reached the kidneys, causing fever, back or side pain, nausea, and painful urination. Please see a doctor for antibiotics.").
-description(chronic_kidney_disease, "Gradual loss of kidney function over time, which can cause swelling in the ankles, nausea, and blood in the urine.").
-description(glomerulonephritis, "Inflammation of the tiny filters inside the kidneys, causing puffiness in the face, swollen ankles, and blood in the urine.").
-description(cellulitis, "A bacterial skin infection that causes an area of red, swollen, painful skin along with a fever. A doctor can prescribe antibiotics to clear it.").
-description(dermatitis, "Skin irritation or eczema that causes red, dry, cracked, and itchy skin.").
-description(chickenpox, "A contagious viral illness that causes fever and an itchy rash of small fluid-filled blisters across the body.").
-description(mpox, "A viral illness that causes fever, swollen glands, and a rash with blisters.").
-description(hand_foot_mouth_disease, "A viral infection that causes fever, painful sores inside the mouth, and a rash or blisters on the hands and feet.").
-description(leprosy, "A slow-growing bacterial infection affecting the skin and nerves, causing pale skin patches, numbness, and muscle weakness. It is curable with medical treatment.").
-description(sore_eyes, "Also known as pink eye or conjunctivitis. It causes red, itchy, and watery eyes. Avoid rubbing your eyes and wash your hands frequently.").
-description(ischemic_heart_disease, "Reduced blood flow to the heart muscle causing chest pain or pressure, shortness of breath, sweating, and nausea. Seek emergency medical attention immediately.").
-description(stroke, "A medical emergency where blood flow to part of the brain stops, causing facial drooping, arm weakness, and trouble speaking. Call emergency services immediately.").
-description(hypertension, "High blood pressure. When very high, it can cause headache, dizziness, and blurry vision. Have your blood pressure checked with a cuff.").
-description(diabetes, "A condition where blood sugar levels are too high, often causing constant thirst, frequent urination, and blurry vision.").
-description(heart_failure, "A condition where the heart pumps less effectively, leading to shortness of breath, swollen ankles, and a fluttering or racing heartbeat.").
-description(atherosclerosis, "Narrowing of the arteries from plaque buildup, which can cause chest pain, leg pain when walking, and numbness.").
-description(deep_vein_thrombosis, "A blood clot in a deep vein, usually in the leg, causing leg pain, swelling, redness, and warm skin in that area. See a doctor promptly.").
-description(anemia, "A low level of healthy red blood cells to carry oxygen, causing pale skin, dizziness, and a fast or noticeable heartbeat.").
-description(cancer, "Abnormal cell growth in the body that can cause unexplained weight loss, loss of appetite, and a painless lump. Please see a doctor for an evaluation.").
-description(malnutrition, "A lack of enough nutrients or calories in the diet, leading to weight loss, low body weight, and weak muscles.").
-description(epilepsy, "A brain condition that causes repeated seizures, sudden muscle jerking, and brief loss of awareness.").
-description(tetanus, "A serious bacterial nerve condition from a wound, causing stiff muscles, painful spasms, stiffness in the jaw (lockjaw), and trouble swallowing. Seek emergency care.").
-description(rabies, "A life-threatening viral infection from an animal bite or scratch, causing fever, numbness, muscle spasms, and difficulty swallowing water. Seek emergency care immediately.").
-description(arthritis, "Swelling and tenderness in one or more joints, causing joint pain, swelling, and stiffness—especially first thing in the morning.").
-description(depression, "A mood condition that causes a persistent feeling of sadness, loss of interest in daily activities, trouble sleeping, and feelings of hopelessness.").
-description(schizophrenia, "A serious mental health condition that affects how a person thinks and perceives reality, causing hallucinations, strong false beliefs, and withdrawal from others.").
-description(alzheimers, "A brain condition that slowly affects memory, causing forgetfulness, confusion about time or place, trouble finding words, and mood changes.").
+description(influenza, "Acute viral respiratory illness with fever, cough and coryza. Usually non-urgent; escalate if breathless, dehydrated, elderly, pregnant or immunocompromised.").
+description(measles, "Highly contagious viral illness: fever, cough, coryza, conjunctivitis, maculopapular rash. Isolate on arrival (airborne). Watch for pneumonia and dehydration in children.").
+description(covid_19, "Viral respiratory infection: fever, cough, sore throat, loss of smell. Apply respiratory isolation; check SpO2 and work of breathing.").
+description(acute_respiratory_infection, "Lower respiratory infection with fever, cough and tachypnoea. Check SpO2 and respiratory rate; tachypnoea in children is a danger sign.").
+description(pneumonia, "Lung infection: fever, productive cough, pleuritic chest pain, dyspnoea. High risk; check SpO2, RR and BP. Likely needs labs, chest X-ray and IV antibiotics.").
+description(acute_bronchitis, "Inflammation of the large airways: productive cough, wheeze, sore throat. Usually non-urgent if SpO2 and RR are normal.").
+description(chronic_lower_respiratory_disease, "COPD or asthma exacerbation: dyspnoea, wheeze, chest tightness. Assess work of breathing and SpO2; may need nebulised bronchodilators.").
+description(tuberculosis, "Pulmonary TB: chronic cough, fever, weight loss. Apply airborne isolation; needs sputum tests and chest X-ray.").
+description(pertussis, "Whooping cough: paroxysmal coughing fits, post-tussive vomiting. Droplet isolation; infants are at risk of apnoea.").
+description(extrapulmonary_tuberculosis, "TB outside the lungs: lymphadenopathy, fever, night sweats, weight loss. Needs labs and imaging; not usually time-critical.").
+description(hiv, "Possible HIV: persistent fever, lymphadenopathy, weight loss, rash. Arrange testing and counselling; assess for opportunistic infection.").
+description(diphtheria, "Bacterial pharyngitis with grey pseudomembrane and bull neck. High risk of airway obstruction; isolate and escalate to a doctor now.").
+description(dengue, "Mosquito-borne viral fever: headache, retro-orbital pain, myalgia. Check platelets and haematocrit; watch for warning signs (bleeding, abdominal pain, persistent vomiting).").
+description(chikungunya, "Mosquito-borne viral fever with severe polyarthralgia and rash. Usually supportive care; exclude dengue.").
+description(leptospirosis, "Bacterial infection after flood or soil exposure: fever, headache, myalgia, calf pain. Ask about exposure; needs labs and antibiotics, watch renal function.").
+description(malaria, "Parasitic infection: cyclical fever, rigors, headache. Ask about travel; needs a blood smear or rapid test urgently.").
+description(typhoid_fever, "Enteric fever: sustained fever, headache, abdominal pain, anorexia. Needs blood cultures and antibiotics.").
+description(meningitis, "Meningeal infection: fever, severe headache, neck stiffness, vomiting. Time-critical; escalate to a doctor immediately for antibiotics.").
+description(meningococcemia, "Meningococcal sepsis: fever, non-blanching rash or purpura, neck stiffness. Life-threatening; immediate resuscitation area and antibiotics.").
+description(sepsis, "Dysregulated response to infection: fever, tachycardia, tachypnoea, altered mental state. Life-threatening; start sepsis pathway now.").
+description(rheumatic_fever, "Post-streptococcal inflammation: fever, migratory polyarthritis, chest pain. Needs ECG and labs to check for carditis.").
+description(diarrhea, "Acute gastroenteritis: diarrhoea, vomiting, cramps. Assess hydration; oral rehydration if mild.").
+description(cholera, "Profuse watery diarrhoea with signs of dehydration (sunken eyes, dry skin). High risk of hypovolaemic shock; start rehydration now.").
+description(dysentery, "Bloody diarrhoea with cramps and fever. Needs stool tests; assess hydration.").
+description(schistosomiasis, "Parasitic infection after freshwater exposure: abdominal pain, bloody diarrhoea, itch. Ask about exposure; needs stool or urine tests.").
+description(appendicitis, "Suspected appendicitis: abdominal pain, fever, nausea, anorexia. Keep nil by mouth; needs labs, imaging and surgical review.").
+description(acute_pancreatitis, "Severe epigastric pain radiating to the back with nausea and vomiting. Needs labs (lipase), IV fluids and analgesia.").
+description(gastric_ulcer, "Peptic ulcer: epigastric pain, heartburn, bloating, nausea. Escalate if there is haematemesis, melaena or a rigid abdomen.").
+description(cirrhosis, "Chronic liver disease: jaundice, ascites, bruising, pruritus. Watch for GI bleeding and confusion (encephalopathy).").
+description(hepatitis_a, "Acute viral hepatitis: fever, anorexia, dark urine, jaundice. Needs liver function tests; enteric precautions.").
+description(hepatitis_b, "Viral hepatitis: nausea, dark urine, pale stools, jaundice. Needs serology and liver function tests.").
+description(hepatitis_c, "Viral hepatitis: abdominal pain, nausea, dark urine, pale stools, jaundice. Needs serology and liver function tests.").
+description(urinary_tract_infection, "Lower UTI: dysuria, frequency, suprapubic pain, cloudy urine. Urinalysis; usually non-urgent.").
+description(kidney_infection, "Pyelonephritis: fever, flank pain, dysuria, nausea. Needs urine and blood tests; may need IV antibiotics. Watch for sepsis.").
+description(chronic_kidney_disease, "Chronic kidney disease: oedema, nausea, haematuria. Check potassium, creatinine and BP.").
+description(glomerulonephritis, "Glomerular inflammation: haematuria, facial and ankle oedema. Check BP, urinalysis and renal function.").
+description(cellulitis, "Bacterial skin infection: erythema, swelling, pain, fever. Mark the margin; may need IV antibiotics.").
+description(dermatitis, "Eczema or dermatitis: itchy, dry, red, cracked skin. Non-urgent.").
+description(chickenpox, "Varicella: fever with itchy vesicular rash. Airborne isolation; avoid contact with pregnant or immunocompromised patients.").
+description(mpox, "Mpox: fever, lymphadenopathy, vesicular rash. Isolate and notify infection control.").
+description(hand_foot_mouth_disease, "Viral infection in children: fever, mouth ulcers, vesicles on hands and feet. Check oral intake and hydration.").
+description(leprosy, "Leprosy: hypopigmented skin patches, numbness, weakness. Non-urgent; refer for specialist assessment.").
+description(sore_eyes, "Conjunctivitis: red, itchy, watery eyes. Non-urgent; escalate if there is pain, reduced vision or photophobia.").
+description(ischemic_heart_disease, "Possible acute coronary syndrome: chest pain, dyspnoea, diaphoresis, nausea. ECG within 10 minutes; escalate to a doctor now.").
+description(stroke, "Possible acute stroke (FAST positive): facial droop, arm weakness, speech difficulty. Note time last known well; activate the stroke pathway now.").
+description(hypertension, "Raised blood pressure with headache, dizziness, blurred vision. Recheck BP; hypertensive emergency if there are end-organ symptoms.").
+description(diabetes, "Possible hyperglycaemia: polydipsia, polyuria, blurred vision. Check capillary glucose and ketones.").
+description(heart_failure, "Heart failure: dyspnoea, ankle oedema, palpitations. Check SpO2, ECG and chest X-ray; may need IV diuretics.").
+description(atherosclerosis, "Peripheral or coronary arterial disease: chest pain, claudication, numbness. Exclude acute coronary syndrome or limb ischaemia.").
+description(deep_vein_thrombosis, "Suspected DVT: unilateral leg pain, swelling, warmth, erythema. Needs D-dimer or ultrasound; watch for signs of pulmonary embolism.").
+description(anemia, "Anaemia: pallor, dizziness, palpitations. Check haemoglobin; ask about bleeding.").
+description(cancer, "Possible malignancy: unexplained weight loss, anorexia, painless lump. Non-urgent unless unstable; refer for work-up.").
+description(malnutrition, "Malnutrition: weight loss, low weight, muscle wasting. Check weight, glucose and electrolytes.").
+description(epilepsy, "Seizure disorder: seizures, jerking, loss of awareness. Check glucose; an ongoing seizure is an emergency.").
+description(tetanus, "Tetanus after a wound: muscle rigidity, spasms, trismus, dysphagia. Airway risk; escalate now and give immunoglobulin.").
+description(rabies, "Possible rabies after an animal bite: fever, paraesthesia, spasms, hydrophobia. Escalate now; wound care and post-exposure prophylaxis.").
+description(arthritis, "Inflammatory arthritis: joint pain, swelling, morning stiffness. Non-urgent; exclude septic joint if there is fever or a single hot joint.").
+description(depression, "Depressive symptoms: low mood, anhedonia, sleep problems, hopelessness. Ask directly about self-harm and suicidal thoughts.").
+description(schizophrenia, "Psychotic symptoms: hallucinations, delusions, disordered thinking. Assess risk to self and others; arrange psychiatry review.").
+description(alzheimers, "Cognitive decline: memory loss, confusion, word-finding difficulty, mood change. Exclude acute delirium (infection, glucose, medication).").
