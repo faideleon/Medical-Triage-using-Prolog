@@ -34,11 +34,17 @@ start_server(Port) :-
 
 % Runs when the file is started with "swipl private/server.pl".
 % Starts the server and keeps it running until Ctrl+C.
+% Another port can be given at the end: swipl private/server.pl 8080
 :- initialization(main, main).
 
 main :-
-	start_server(8000),
-	format("Server running at http://localhost:8000/~n"),
+	current_prolog_flag(argv, Args),
+	(   Args = [Arg|_], atom_number(Arg, Port)
+	->  true
+	;   Port = 8000
+	),
+	start_server(Port),
+	format("Server running at http://localhost:~w/~n", [Port]),
 	thread_get_message(_).
 
 % Sends the files in public/ (index.html, app.js) to the browser.
@@ -68,18 +74,30 @@ in_page_category(Page, Condition) :-
 
 % ---------- POST /api/triage ----------
 % Gets:     {"category": "fever", "answers": [{"symptom": "cough", "answer": "yes"}]}
-% Replies:  {"candidates": [{"id": ..., "category": ..., "symptoms": [...]}]}
+% Replies:  {"candidates": [{"id": ..., "category": ..., "symptoms": [...],
+%                            "description": ..., "high_risk": true}],
+%            "high_risk_symptoms": [...]}
 % A condition fits when it has every "yes" symptom and none of the "no" ones.
 handle_triage(Request) :-
 	http_read_json_dict(Request, Data),
 	atom_string(Page, Data.category),
 	read_answers(Data.answers, Answers),
-	findall(_{id: Condition, category: Category, symptoms: Symptoms},
+	findall(_{id: Condition, category: Category, symptoms: Symptoms,
+	          description: Text, high_risk: HighRisk},
 		(in_page_category(Page, Condition),
 		 condition(Condition, Category, Symptoms),
-		 fits_answers(Condition, Answers)),
+		 fits_answers(Condition, Answers),
+		 description(Condition, Text),
+		 is_high_risk_condition(Condition, HighRisk)),
 		Candidates),
-	reply_json_dict(_{candidates: Candidates}).
+	findall(Symptom, high_risk_symptom(Symptom), RiskSymptoms),
+	reply_json_dict(_{candidates: Candidates, high_risk_symptoms: RiskSymptoms}).
+
+% is_high_risk_condition(Condition, Bool): true or false for the JSON reply.
+is_high_risk_condition(Condition, true) :-
+	high_risk_condition(Condition),
+	!.
+is_high_risk_condition(_, false).
 
 % read_answers(Items, Answers)
 % Turns the JSON answers into a list like [cough-yes, fever-no].
@@ -98,7 +116,8 @@ fits_answers(Condition, Answers) :-
 
 % ---------- POST /api/save ----------
 % Gets:     {"name": "Juan", "age": 45, "answers": [{"symptom": "cough", "answer": "yes"}]}
-% Replies:  {"id": 3}
+% Replies:  {"id": 3, "condition": "meningitis", "possible": [...],
+%            "high_risk": "YES", "resources": 3}
 % Finds the likely conditions and saves the patient for the C program.
 handle_save(Request) :-
 	http_read_json_dict(Request, Data),
@@ -120,4 +139,5 @@ handle_save(Request) :-
 		'HIGH_RISK' - HighRisk,
 		'RESOURCES' - Resources
 	], Id),
-	reply_json_dict(_{id: Id}).
+	reply_json_dict(_{id: Id, condition: Condition, possible: Possible,
+	                  high_risk: HighRisk, resources: Resources}).
