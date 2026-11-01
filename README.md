@@ -9,7 +9,7 @@
 1. Open a terminal in the project folder.
 2. Start the Prolog server:
    ```
-   swipl -q -s private/server.pl -g "start_server(8000), thread_get_message(_)" -t halt
+   swipl private/server.pl
    ```
 3. Open <http://localhost:8000/> and answer the questions.
 4. Type the patient's name and age, then confirm. The patient is saved.

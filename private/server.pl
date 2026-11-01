@@ -2,8 +2,8 @@
 % The web page (public/) talks to Prolog through this server.
 %
 % Start it from the project root folder:
-%   swipl -q -s private/server.pl -g "start_server(8000), thread_get_message(_)" -t halt
-% then open http://localhost:8000/
+%   swipl private/server.pl
+% then open http://localhost:8000/ (Ctrl+C stops it)
 %
 % The web page uses two APIs:
 %   POST /api/triage  - sends the answers so far, gets the conditions that still fit
@@ -31,6 +31,15 @@
 
 start_server(Port) :-
 	http_server(http_dispatch, [port(Port)]).
+
+% Runs when the file is started with "swipl private/server.pl".
+% Starts the server and keeps it running until Ctrl+C.
+:- initialization(main, main).
+
+main :-
+	start_server(8000),
+	format("Server running at http://localhost:8000/~n"),
+	thread_get_message(_).
 
 % Sends the files in public/ (index.html, app.js) to the browser.
 serve_public(Request) :-

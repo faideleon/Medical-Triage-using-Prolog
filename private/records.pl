@@ -2,18 +2,11 @@
 % Saves each patient to a plain text file that the C triage program reads.
 % The format is explained in docs/INTAKE_FILE_FORMAT.md.
 %
-% Each patient is one block:
-%   BEGIN
-%   KEY=value
-%   ...
-%   END
-%
 % New patients are always added at the end of the file (append).
 % Old patients are never changed or deleted.
 
 
-% intake_file(File)
-% Where the records are saved. Run Prolog from the project root folder.
+
 intake_file('data/intake_records.txt').
 
 
