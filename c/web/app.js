@@ -11,7 +11,8 @@
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
   var pad = function (n) { return "P" + String(n).padStart(3, "0"); };
   var human = function (s) { return s.replace(/_/g, " "); };
-  var chip = function (p) { return '<span class="pchip p' + p + '"><b>' + p + "</b>" + LABEL[p] + "</span>"; };
+  var chip = function (p) { return '<span class="prio p' + p + '"><b>' + p + "</b>" + LABEL[p] + "</span>"; };
+  var icon = function (name) { return '<svg class="icon" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; };
 
   /* Same rules as compute_priority() in the C code, plus the reason that decided it. */
   function computePriority(p) {
@@ -78,30 +79,34 @@
   }
   function report(res, okMsg) { toast(res.ok ? okMsg : res.msg, !res.ok); }
 
-  /* The queue shows the same columns as print_queue(): position, ID, name, priority, condition. */
-  function detail(p) { return "Condition: " + (p.likely ? human(p.likely) : "-"); }
-
   /* render */
   function renderStats() {
     var a = admittedCount();
     var dis = S.records.filter(function (r) { return r.status === "discharged"; }).length;
-    $("st-beds").innerHTML = a + "<small> / " + CAPACITY + "</small>";
-    var t = ""; for (var i = 0; i < CAPACITY; i++) t += '<span class="tick' + (i < a ? " on" : "") + '"></span>';
+    $("st-beds").textContent = a + " / " + CAPACITY;
+    var t = ""; for (var i = 0; i < CAPACITY; i++) t += '<i class="' + (i < a ? "on" : "") + '"></i>';
     $("st-ticks").innerHTML = t;
+    $("beds-meta").textContent = a + " of " + CAPACITY + " in use";
     $("st-wait").textContent = S.queue.length;
     $("st-dis").textContent = dis;
-    $("q-count").textContent = S.queue.length ? "(" + S.queue.length + ")" : "";
-    $("admit-btn").disabled = !S.queue.length;
+    $("q-count").textContent = S.queue.length + " waiting";
+    $("admit-btn").disabled = !S.queue.length || a >= CAPACITY;
+    $("admit-note").textContent = !S.queue.length ? "Nobody is waiting."
+      : a >= CAPACITY ? "No free beds. Discharge a patient to admit the next one."
+      : "Next: " + S.records[S.queue[0]].name + ", priority " + S.records[S.queue[0]].priority + ".";
     $("sample-note").hidden = !S.sample;
   }
 
+  /* The queue shows the same columns as print_queue(): position, ID, name, priority, condition. */
   function renderQueue() {
-    var el = $("queue");
-    if (!S.queue.length) { el.innerHTML = '<li class="empty">The waiting queue is empty.</li>'; return; }
-    el.innerHTML = S.queue.map(function (idx, n) {
+    $("queue-empty").hidden = S.queue.length > 0;
+    $("queue").innerHTML = S.queue.map(function (idx, n) {
       var p = S.records[idx];
-      return '<li class="qrow' + (n === 0 ? " next" : "") + '"><div class="pos">' + (n === 0 ? "<em>Next</em>" : "") + (n + 1) + "</div>" +
-        '<div class="who"><strong>' + esc(p.name) + '</strong><span class="id">' + esc(p.id) + '</span><span class="sub">' + esc(detail(p)) + "</span></div>" + chip(p.priority) + "</li>";
+      return '<tr class="p' + p.priority + (n === 0 ? " next" : "") + '">' +
+        '<td class="pos">' + (n === 0 ? '<span class="next-tag">Next</span>' : "") + (n + 1) + "</td>" +
+        '<td class="who"><strong>' + esc(p.name) + '</strong><span class="id">' + esc(p.id) + "</span></td>" +
+        '<td class="cond">' + esc(p.likely ? human(p.likely) : "Not recorded") + "</td>" +
+        "<td>" + chip(p.priority) + "</td></tr>";
     }).join("");
   }
 
@@ -111,11 +116,11 @@
       var idx = -1;
       S.records.forEach(function (r, i) { if (r.status === "admitted" && r.bed === b) idx = i; });
       if (idx === -1) {
-        html += '<li class="bed free"><div class="bednum"><small>BED</small><b>' + b + '</b></div><div>Free</div></li>';
+        html += '<li class="bed free"><div class="bednum"><small>BED</small><b>' + b + '</b></div><div class="who">Free</div></li>';
       } else {
         var p = S.records[idx];
         html += '<li class="bed"><div class="bednum"><small>BED</small><b>' + b + '</b></div><div class="who"><strong>' + esc(p.name) + '</strong><span class="id">' + esc(p.id) + "</span>" +
-          '<div class="meta">' + chip(p.priority) + '</div></div><button class="btn ghost small" type="button" data-discharge="' + idx + '">Discharge</button></li>';
+          "<div>" + chip(p.priority) + '</div></div><button class="btn btn-quiet" type="button" data-discharge="' + idx + '">Discharge</button></li>';
       }
     }
     $("beds").innerHTML = html;
@@ -126,10 +131,10 @@
     var q = $("s-q").value.trim().toLowerCase(), out = $("s-results");
     if (!q) { out.innerHTML = '<p class="hint">Type part of a name to see matching patients.</p>'; return; }
     var hits = S.records.filter(function (r) { return r.name.toLowerCase().indexOf(q) !== -1; });
-    if (!hits.length) { out.innerHTML = "<p>No patient found.</p>"; return; }
-    out.innerHTML = hits.map(function (p) {
-      return '<div class="hit"><dl class="kv"><dt>ID</dt><dd class="mono">' + esc(p.id) + "</dd><dt>Name</dt><dd>" + esc(p.name) + "</dd><dt>Priority</dt><dd>" + chip(p.priority) + "</dd></dl></div>";
-    }).join("");
+    if (!hits.length) { out.innerHTML = '<p class="hint">No patient found.</p>'; return; }
+    out.innerHTML = '<div class="hits">' + hits.map(function (p) {
+      return '<div class="hit"><dl class="kv"><dt>ID</dt><dd>' + esc(p.id) + "</dd><dt>Name</dt><dd>" + esc(p.name) + "</dd><dt>Priority</dt><dd>" + chip(p.priority) + "</dd><dt>Status</dt><dd>" + esc(p.status === "admitted" ? "Admitted, bed " + p.bed : p.status === "discharged" ? "Discharged" : "Waiting") + "</dd></dl></div>";
+    }).join("") + "</div>";
   }
 
   function renderAll() { renderStats(); renderQueue(); renderBeds(); renderSearch(); renderImportPreview(); renderAddForm(); }
@@ -182,7 +187,7 @@
   function renderImportPreview() {
     var list = parseProlog($("i-text").value), out = $("i-parsed");
     if (!list.length) {
-      out.innerHTML = '<p class="muted">Choose a file or load the example to see the patients in it.</p>';
+      out.innerHTML = '<p class="muted">Choose the intake file, or load an example record, to see the patients in it.</p>';
     } else {
       out.innerHTML = list.map(function (d) {
         var dup = !!d.id && idExists(d.id);
@@ -190,8 +195,8 @@
         return '<div class="item' + (dup || !d.name ? " bad" : "") + '"><div class="top"><strong>' + esc(d.name || "No NAME in this record") + "</strong>" + chip(r.priority) + '</div><span class="sub">' +
           esc((d.id || pad(S.nextArrival)) + " · " + (d.likely ? "Likely: " + human(d.likely) : (d.category || "no condition")) + " · " + (d.symptoms.length ? d.symptoms.map(human).join(", ") : "no symptoms")) +
           " · " + esc(r.why) + "</span>" +
-          (!d.name ? '<span class="sub">Add a NAME= line to import this patient.</span>' : "") +
-          (dup ? '<span class="sub">ID ' + esc(d.id) + " is already in the records.</span>" : "") + "</div>";
+          (!d.name ? '<span class="sub why-not">Add a NAME= line to import this patient.</span>' : "") +
+          (dup ? '<span class="sub why-not">ID ' + esc(d.id) + " is already on the board.</span>" : "") + "</div>";
       }).join("");
     }
     var ready = list.filter(importable).length;
@@ -219,7 +224,7 @@
   /* ---------- Add patient (add_patient_manual) ---------- */
   function renderAddForm() {
     $("a-chips").innerHTML = A.symptoms.map(function (s, i) {
-      return '<span class="chip">' + esc(human(s)) + '<button type="button" aria-label="Remove ' + esc(human(s)) + '" data-rm="' + i + '">×</button></span>';
+      return '<span class="chip">' + esc(human(s)) + '<button type="button" aria-label="Remove ' + esc(human(s)) + '" data-rm="' + i + '">' + icon("x") + "</button></span>";
     }).join("");
     $("a-sym").disabled = A.symptoms.length >= MAX_SYMPTOMS;
     $("a-sym-add").disabled = A.symptoms.length >= MAX_SYMPTOMS;
@@ -265,9 +270,9 @@
     report(res, res.ok ? "Patient " + res.p.id + " discharged." : "");
   });
   $("clear-btn").addEventListener("click", function () {
-    S = { records: [], queue: [], nextArrival: 1, sample: false }; renderAll(); toast("The board is empty. Add the first patient below.");
+    S = { records: [], queue: [], nextArrival: 1, sample: false }; renderAll(); toast("The board is empty. Import the intake file or add a patient.");
   });
-  document.querySelector(".tabs").addEventListener("click", function (e) {
+  document.querySelector(".segmented").addEventListener("click", function (e) {
     var t = e.target.closest("[data-tab]"); if (!t) return;
     ["imp", "add", "sea"].forEach(function (k) {
       var on = k === t.getAttribute("data-tab");

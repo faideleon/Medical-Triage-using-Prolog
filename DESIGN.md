@@ -35,6 +35,16 @@ Public Sans (Google Fonts), falling back to Segoe UI / system-ui. Tabular figure
 - **Tables** (differential, findings): uppercase header row, 1px row rules, sticky headers inside a scroll area. The match meter is a row of small square cells, filled for each sign present.
 - **Icons**: inline SVG sprite (check, x, undo, alert), 2.2 stroke, round caps.
 
+## Triage board (c/web)
+
+The C program's web board uses the same tokens, type and components (`c/web/style.css`).
+
+- **Live panel** is the waiting queue; its one primary action is "Admit next patient". The next row is tinted `--active-tint`.
+- **Priority mark**: a small outlined square with the number, then the label. 1 Critical is a filled red square on a red row band; 2 Emergent is red text; 3 Urgent is amber; 4 and 5 stay in `--ink-2`.
+- **Beds** column (360px) lists the 5 beds with a square-cell occupancy meter in its header. Discharge is a quiet button.
+- **Tools** sit under the queue as a three-way segmented row (import, manual entry, find), the same as the complaint row.
+- Messages show as a navy toast at the bottom (red for errors).
+
 ## Layout
 
 Desktop first: a 1440px max workspace with a main column and a 360px findings column that stays in view. Below 960px it becomes one column; below 720px the complaint row becomes 2x2 and the body-system column is hidden.
