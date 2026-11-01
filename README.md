@@ -1,33 +1,40 @@
 # Medical Triage (Prolog + C)
 
-- **Web page** – asks the patient's symptoms.
-- **Prolog server** – checks the symptoms and saves the patient to `data/intake_records.txt`.
-- **C** – triage. Reads that file, decides the ESI level and assigns a bed.
-
-## How to use
-
-1. Open a terminal in the project folder.
-2. Start the Prolog server:
-   ```
-   swipl private/server.pl
-   ```
-   (Another port: `swipl private/server.pl 8080`.)
-3. Open <http://localhost:8000/> and answer the questions.
-4. Type the patient's name and age, then confirm. The patient is saved.
-5. Run the C program to read the saved patients:
-   ```
-   gcc private/triage.c -o triage
-   ./triage
-   ```
+- **Prolog** – the intake web page asks the patient's symptoms, finds the likely condition and saves the patient to `data/intake_records.txt`.
+- **C** – the triage. Reads that file, puts patients in a queue by priority and assigns beds.
 
 ## Folders
 
-`private/` is the backend and `public/` is the frontend.
+```
+prolog/            Prolog side
+  server.pl        web server (loads knowledge.pl, triage.pl, records.pl)
+  knowledge.pl     conditions, symptoms, high-risk lists, triage notes
+  triage.pl        rules that find the likely conditions
+  records.pl       writes data/intake_records.txt
+  conditions.pl    standalone terminal symptom checker
+  web/             intake web page served by server.pl
+c/                 C side
+  triage.c         C triage program: waiting queue, priority and beds
+  web/             web version of the C triage program
+data/              the file Prolog writes and C reads (not in git)
+docs/              file format between Prolog and C
+```
 
-- `private/server.pl` – Prolog web server (loads `knowledge.pl`, `triage.pl`, `records.pl`)
-- `private/conditions.pl` – standalone terminal symptom checker (`swipl private/conditions.pl`, then `start.`)
-- `private/triage.c` – C triage program: waiting queue, priority and beds
-- `public/` – intake web page served by the Prolog server
-- `public-c/` – web version of the C triage program (open `public-c/index.html` in a browser)
-- `data/` – the file Prolog writes and C reads
-- `docs/` – file format details
+## How to use
+
+Run everything from the project root folder.
+
+1. Start the Prolog server:
+   ```
+   swipl prolog/server.pl
+   ```
+   (Another port: `swipl prolog/server.pl 8080`.)
+2. Open <http://localhost:8000/>, answer the questions, then type the patient's name and age and save.
+3. Run the C program and choose **2. Import patients** (press Enter for the default file):
+   ```
+   gcc c/triage.c -o triage
+   ./triage
+   ```
+   Or open `c/web/index.html` in a browser and import `data/intake_records.txt`.
+
+The terminal symptom checker: `swipl prolog/conditions.pl`, then `start.`

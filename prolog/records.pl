@@ -7,7 +7,17 @@
 
 
 
-intake_file('data/intake_records.txt').
+% data_dir(Dir): the data/ folder in the project root, next to prolog/.
+% Found from where this file is, so the server works from any folder.
+:- dynamic data_dir/1.
+:- prolog_load_context(directory, Dir),
+   atom_concat(Dir, '/../data', DataDir),
+   retractall(data_dir(_)), assertz(data_dir(DataDir)).
+
+% intake_file(File): the file the C triage program reads.
+intake_file(File) :-
+	data_dir(Dir),
+	atom_concat(Dir, '/intake_records.txt', File).
 
 
 % save_record(Fields, Id)
@@ -15,7 +25,8 @@ intake_file('data/intake_records.txt').
 % Adds the patient number (ID) and arrival time, then writes the block.
 save_record(Fields, Id) :-
 	intake_file(File),
-	make_directory_path('data'),
+	data_dir(DataDir),
+	make_directory_path(DataDir),
 	next_id(File, Id),
 	get_time(Now),
 	format_time(atom(Arrived), '%Y-%m-%d %H:%M:%S', Now),

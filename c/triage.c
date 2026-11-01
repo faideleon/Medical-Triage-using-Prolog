@@ -8,6 +8,8 @@
 #define MAX_SYMPTOMS 10
 #define MAX_VISIBLE 5
 #define NUM_VISIBLE_CONDITIONS 7
+#define INTAKE_FILE "data/intake_records.txt"
+#define LINE_LEN 512
 
 #define PRIORITY_CRITICAL 1
 #define PRIORITY_EMERGENT 2
@@ -31,6 +33,8 @@ typedef struct {
     char name[50];
     char category[30];
     char likely_condition[50];
+    int age;
+    int high_risk;
     char symptoms[MAX_SYMPTOMS][30];
     int symptom_count;
     int visible[MAX_VISIBLE];
@@ -104,6 +108,11 @@ int compute_priority(Patient *p) {
 
     if (p->symptom_count > 0) {
         best = PRIORITY_LESS_URGENT;
+    }
+
+    /* Prolog flags high-risk signs (HIGH_RISK=YES): never below Emergent */
+    if (p->high_risk && PRIORITY_EMERGENT < best) {
+        best = PRIORITY_EMERGENT;
     }
 
     if (is_emergency(p->likely_condition)) {
@@ -242,14 +251,100 @@ void add_patient_manual(Hospital *h) {
     printf("\nAdded %s (%s) with Priority %d.\n", p.name, p.id, p.priority);
 }
 
-/* Import patient from Prolog export file */
+/* Check if a patient ID is already in the records */
+int id_exists(Hospital *h, const char *id) {
+    for (int i = 0; i < h->record_count; i++) {
+        if (equals_ignore_case(h->records[i].id, id)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* Read one KEY=value line from the Prolog file into the patient.
+   The keys are explained in docs/INTAKE_FILE_FORMAT.md. */
+void read_field(Patient *p, const char *key, char *val) {
+    if (equals_ignore_case(key, "ID")) {
+        // Prolog numbers patients 1, 2, 3...; show them as PL-001
+        if (val[0] != '\0' && strspn(val, "0123456789") == strlen(val)) {
+            snprintf(p->id, sizeof(p->id), "PL-%03d", atoi(val));
+        } else {
+            snprintf(p->id, sizeof(p->id), "%s", val);
+        }
+    } else if (equals_ignore_case(key, "NAME")) {
+        snprintf(p->name, sizeof(p->name), "%s", val);
+    } else if (equals_ignore_case(key, "AGE")) {
+        p->age = atoi(val);
+    } else if (equals_ignore_case(key, "CATEGORY")) {
+        snprintf(p->category, sizeof(p->category), "%s", val);
+    } else if (equals_ignore_case(key, "CONDITION") || equals_ignore_case(key, "LIKELY")) {
+        // "none" means Prolog found no matching condition
+        if (!equals_ignore_case(val, "none")) {
+            snprintf(p->likely_condition, sizeof(p->likely_condition), "%s", val);
+        }
+    } else if (equals_ignore_case(key, "HIGH_RISK")) {
+        p->high_risk = equals_ignore_case(val, "YES");
+    } else if (equals_ignore_case(key, "SYMPTOMS")) {
+        char *token = strtok(val, ",");
+        while (token != NULL && p->symptom_count < MAX_SYMPTOMS) {
+            snprintf(p->symptoms[p->symptom_count], sizeof(p->symptoms[0]), "%s", token);
+            p->symptom_count++;
+            token = strtok(NULL, ",");
+        }
+    }
+}
+
+/* Add one patient read from the Prolog file to the records and the queue.
+   Returns 1 if added, 0 if it was skipped. */
+int add_imported(Hospital *h, Patient *p) {
+    if (p->id[0] != '\0' && id_exists(h, p->id)) {
+        return 0; // already imported earlier
+    }
+    if (h->record_count >= MAX_PATIENTS) {
+        printf("Records array is full.\n");
+        return 0;
+    }
+
+    if (p->name[0] == '\0') {
+        printf("Enter patient name for imported record: ");
+        fgets(p->name, sizeof(p->name), stdin);
+        p->name[strcspn(p->name, "\n")] = 0;
+    }
+    if (p->id[0] == '\0') {
+        sprintf(p->id, "P%03d", h->next_arrival_no);
+    }
+    p->arrival_no = h->next_arrival_no++;
+    p->status = STATUS_WAITING;
+    p->priority = compute_priority(p);
+
+    int index = h->record_count;
+    h->records[index] = *p;
+    h->record_count++;
+
+    insert_to_queue(h, index);
+    printf("Imported %s (%s) with Priority %d.\n", p->name, p->id, p->priority);
+    return 1;
+}
+
+/* Import patients from the file Prolog writes.
+   Each patient is a block from BEGIN to END. A file without BEGIN/END
+   lines is read as one patient (the older format). Patients whose ID is
+   already in the records are skipped, so the same file can be imported
+   again to pick up new arrivals. */
 void import_prolog_file(Hospital *h) {
-    char path[100];
-    printf("\nEnter path of Prolog file: ");
+    char path[200];
+    printf("\nEnter path of Prolog file (press Enter for %s): ", INTAKE_FILE);
     fgets(path, sizeof(path), stdin);
-    path[strcspn(path, "\n")] = 0;
+    path[strcspn(path, "\r\n")] = 0;
+    if (path[0] == '\0') {
+        strcpy(path, INTAKE_FILE);
+    }
 
     FILE *file = fopen(path, "r");
+    if (file == NULL && strcmp(path, INTAKE_FILE) == 0) {
+        // run from inside the c/ folder: data/ is one level up
+        file = fopen("../" INTAKE_FILE, "r");
+    }
     if (file == NULL) {
         printf("Could not open file!\n");
         return;
@@ -258,50 +353,46 @@ void import_prolog_file(Hospital *h) {
     Patient p;
     memset(&p, 0, sizeof(Patient));
 
-    char line[100];
-    while (fgets(line, sizeof(line), file)) {
-        line[strcspn(line, "\n")] = 0;
-        char *equals = strchr(line, '=');
-        if (equals != NULL) {
-            *equals = '\0';
-            char *key = line;
-            char *val = equals + 1;
+    int in_block = 0, saw_block = 0, has_data = 0;
+    int imported = 0, skipped = 0;
+    char line[LINE_LEN];
 
-            if (equals_ignore_case(key, "ID")) {
-                strcpy(p.id, val);
-            } else if (equals_ignore_case(key, "CATEGORY")) {
-                strcpy(p.category, val);
-            } else if (equals_ignore_case(key, "LIKELY")) {
-                strcpy(p.likely_condition, val);
-            } else if (equals_ignore_case(key, "SYMPTOMS")) {
-                char *token = strtok(val, ",");
-                while (token != NULL && p.symptom_count < MAX_SYMPTOMS) {
-                    strcpy(p.symptoms[p.symptom_count], token);
-                    p.symptom_count++;
-                    token = strtok(NULL, ",");
-                }
-            }
+    printf("\n");
+    while (fgets(line, sizeof(line), file)) {
+        line[strcspn(line, "\r\n")] = 0;
+
+        if (equals_ignore_case(line, "BEGIN")) {
+            memset(&p, 0, sizeof(Patient));
+            in_block = 1;
+            saw_block = 1;
+            continue;
         }
+        if (equals_ignore_case(line, "END")) {
+            if (in_block) {
+                if (add_imported(h, &p)) imported++;
+                else skipped++;
+            }
+            in_block = 0;
+            continue;
+        }
+
+        char *equals = strchr(line, '=');
+        if (equals == NULL || (saw_block && !in_block)) {
+            continue; // not a KEY=value line, or outside a block
+        }
+        *equals = '\0';
+        read_field(&p, line, equals + 1);
+        has_data = 1;
     }
     fclose(file);
 
-    printf("Enter patient name for imported record: ");
-    fgets(p.name, sizeof(p.name), stdin);
-    p.name[strcspn(p.name, "\n")] = 0;
-
-    if (p.id[0] == '\0') {
-        sprintf(p.id, "P%03d", h->next_arrival_no);
+    // Older format: one patient, no BEGIN/END lines
+    if (!saw_block && has_data) {
+        if (add_imported(h, &p)) imported++;
+        else skipped++;
     }
-    p.arrival_no = h->next_arrival_no++;
-    p.status = STATUS_WAITING;
-    p.priority = compute_priority(&p);
 
-    int index = h->record_count;
-    h->records[index] = p;
-    h->record_count++;
-
-    insert_to_queue(h, index);
-    printf("\nImported %s (%s) with Priority %d.\n", p.name, p.id, p.priority);
+    printf("\n%d patient(s) imported, %d skipped (already in the records).\n", imported, skipped);
 }
 
 /* Admit patient from queue head */
@@ -426,7 +517,7 @@ int main(void) {
     while (choice != 0) {
         printf("\n--- Menu ---\n");
         printf("1. Add patient (manual)\n");
-        printf("2. Import patient (Prolog file)\n");
+        printf("2. Import patients (Prolog file)\n");
         printf("3. Show waiting queue\n");
         printf("4. Admit next patient\n");
         printf("5. Discharge patient\n");

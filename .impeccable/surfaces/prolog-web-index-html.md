@@ -1,13 +1,13 @@
 ---
 version: 1
-slug: "public-index-html"
-primary_target: "public/index.html"
-related_targets: ["public/app.js"]
+slug: "prolog-web-index-html"
+primary_target: "prolog/web/index.html"
+related_targets: ["prolog/web/app.js"]
 ---
 
 # Triage intake page
 
-Scope: public/index.html + public/app.js. Mode: Operate. Desktop at ED intake desk, mouse + keyboard.
+Scope: prolog/web/index.html + prolog/web/app.js. Mode: Operate. Desktop at ED intake desk, mouse + keyboard.
 Job: triage nurse asks yes/no symptom questions, sees remaining differential and high-risk findings, enters name/age, saves the patient for the C ESI program.
 Constraints: static HTML/CSS/JS, Prolog API unchanged in shape, working impression only (no ESI decision).
 

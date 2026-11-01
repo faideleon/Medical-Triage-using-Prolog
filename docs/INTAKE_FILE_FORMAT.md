@@ -53,6 +53,23 @@ END
 - Lists are separated by commas with no spaces. Use `strtok(value, ",")`.
 - Ignore keys you do not know, so Prolog can add new ones later.
 
+## How the C program reads it now
+
+`c/triage.c` (menu option 2) and the `c/web/` page both read this
+file the same way:
+
+- Every `BEGIN`…`END` block is one patient; all of them are imported.
+- `ID=3` is shown as `PL-003`. A patient whose ID is already on the board is
+  skipped, so the same file can be imported again to pick up new arrivals.
+- `NAME` comes from the file (C asks only if it is missing).
+- `CONDITION` is the likely condition (`LIKELY` from the older format still
+  works; `none` means no condition).
+- Priority: an emergency condition (stroke, sepsis, meningitis...) is 1,
+  `HIGH_RISK=YES` is at least 2, any symptoms is 4, nothing is 5. Visible
+  conditions entered by staff can raise it.
+- `AGE` is stored. `ARRIVED`, `POSSIBLE_CONDITIONS` and `RESOURCES` are not
+  used yet.
+
 ## How C can decide the ESI level
 
 | Step | Fields | Result |

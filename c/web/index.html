@@ -60,7 +60,7 @@
           <label class="label" for="i-text" style="margin-top:10px">File contents</label>
           <textarea id="i-text" rows="10" spellcheck="false" placeholder="NAME=Maria Santos&#10;ID=PL-014&#10;CATEGORY=infectious&#10;LIKELY=meningitis&#10;SYMPTOMS=fever,stiff_neck,headache"></textarea>
           <div><button class="btn ghost small" id="i-example" type="button">Load an example file</button></div>
-          <p class="hint">The file holds one patient as KEY=VALUE lines: NAME, ID, CATEGORY, LIKELY, SYMPTOMS (comma separated). The name, symptoms and condition all come from Prolog.</p>
+          <p class="hint">Choose <span class="mono">data/intake_records.txt</span>, the file the Prolog intake page writes. Each patient is a block from BEGIN to END with KEY=VALUE lines: NAME, ID, CATEGORY, CONDITION, HIGH_RISK, SYMPTOMS (comma separated). Patients already on the board are skipped.</p>
         </div>
         <div class="field">
           <span class="label">Patient found in the file</span>

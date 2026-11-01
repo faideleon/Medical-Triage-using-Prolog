@@ -4,7 +4,7 @@
     {
       "name": "triage-server",
       "runtimeExecutable": "swipl",
-      "runtimeArgs": ["private/server.pl", "8002"],
+      "runtimeArgs": ["prolog/server.pl", "8002"],
       "port": 8002,
       "autoPort": false
     }

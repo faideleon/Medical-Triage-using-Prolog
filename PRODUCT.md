@@ -20,11 +20,11 @@ Success: the nurse completes an intake quickly and accurately, and high-risk pat
 
 - Desktop computer at the intake desk, mouse and keyboard, wide screen.
 - Busy ED environment; interruptions are common, so the current state must be readable at a glance.
-- The page is served by the local Prolog server (`swipl private/server.pl`, http://localhost:8000/).
+- The page is served by the local Prolog server (`swipl prolog/server.pl`, http://localhost:8000/).
 
 ## Capabilities and Constraints
 
-- Plain static HTML/CSS/JS in `public/`, no build step, no framework.
+- Plain static HTML/CSS/JS in `prolog/web/`, no build step, no framework.
 - APIs: `POST /api/triage` (remaining candidate conditions), `POST /api/save` (save patient, returns patient number).
 - Prolog gives a working impression only; it does not assign the ESI level. The C program does.
 - Knowledge base content is a school project starting point and must be reviewed by clinicians before real use.

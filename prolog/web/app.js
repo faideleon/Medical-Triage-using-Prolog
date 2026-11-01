@@ -429,7 +429,7 @@ async function connectToKnowledgeBase() {
   } catch (error) {
     knowledge.isLoaded = false;
     status.className = "status offline";
-    text.textContent = "Knowledge base offline. Start it with: swipl private/server.pl";
+    text.textContent = "Knowledge base offline. Start it with: swipl prolog/server.pl";
   }
   render();
 }

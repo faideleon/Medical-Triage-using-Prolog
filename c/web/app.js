@@ -17,6 +17,7 @@
   function computePriority(p) {
     var best = 5, why = "No symptoms or visible conditions recorded.";
     if (p.symptoms.length > 0) { best = 4; why = "Symptoms reported."; }
+    if (p.highRisk && 2 < best) { best = 2; why = "Prolog flagged a high-risk sign."; }
     if (p.likely && EMERGENCY.indexOf(p.likely.toLowerCase()) !== -1) { best = 1; why = "Likely condition " + human(p.likely) + " is on the emergency list."; }
     p.visible.forEach(function (i) {
       if (VISIBLE[i][1] < best) { best = VISIBLE[i][1]; why = VISIBLE[i][0] + " is visible."; }
@@ -39,7 +40,7 @@
     var p = {
       id: d.id || pad(S.nextArrival), name: d.name, category: d.category || "", likely: d.likely || "",
       symptoms: d.symptoms.slice(0, MAX_SYMPTOMS), visible: (d.visible || []).slice(0, MAX_VISIBLE),
-      status: "waiting", arrival: S.nextArrival++, bed: 0
+      highRisk: !!d.highRisk, status: "waiting", arrival: S.nextArrival++, bed: 0
     };
     p.priority = computePriority(p).priority;
     S.records.push(p);
@@ -134,27 +135,40 @@
   function renderAll() { renderStats(); renderQueue(); renderBeds(); renderSearch(); renderImportPreview(); renderAddForm(); }
 
   /* ---------- Import from Prolog (import_prolog_file) ----------
-     The whole file is ONE patient: NAME, ID, CATEGORY, LIKELY and SYMPTOMS all come from the file.
-     Later lines overwrite earlier ones, and symptoms from every SYMPTOMS line add up to 10. */
+     Same rules as the C code: each patient is a block from BEGIN to END
+     (the file data/intake_records.txt that Prolog writes). A file without
+     BEGIN/END lines is read as one patient, the older format. */
+  function emptyPatient() {
+    return { name: "", id: "", category: "", likely: "", highRisk: false, symptoms: [], found: false };
+  }
+
+  function readField(d, key, val) {
+    if (key === "NAME") { d.name = val.slice(0, MAX_NAME); }
+    else if (key === "ID") { d.id = /^\d+$/.test(val) ? "PL-" + String(parseInt(val, 10)).padStart(3, "0") : val.slice(0, 9); }
+    else if (key === "CATEGORY") { d.category = val.slice(0, 29); }
+    else if (key === "CONDITION" || key === "LIKELY") { if (val.toLowerCase() !== "none") d.likely = val.slice(0, 49); }
+    else if (key === "HIGH_RISK") { d.highRisk = val.toUpperCase() === "YES"; }
+    else if (key === "SYMPTOMS") {
+      val.split(",").forEach(function (s) {
+        s = s.trim().slice(0, MAX_SYMPTOM_LEN);
+        if (s && d.symptoms.length < MAX_SYMPTOMS) d.symptoms.push(s);
+      });
+    } else { return; }
+    d.found = true;
+  }
+
   function parseProlog(text) {
-    var d = { name: "", id: "", category: "", likely: "", symptoms: [], found: false };
+    var list = [], d = emptyPatient(), inBlock = false, sawBlock = false;
     text.split(/\r?\n/).forEach(function (line) {
+      line = line.trim();
+      if (line.toUpperCase() === "BEGIN") { d = emptyPatient(); inBlock = true; sawBlock = true; return; }
+      if (line.toUpperCase() === "END") { if (inBlock && d.found) list.push(d); inBlock = false; return; }
       var eq = line.indexOf("=");
-      if (eq < 1) return;
-      var key = line.slice(0, eq).trim().toUpperCase(), val = line.slice(eq + 1).trim();
-      if (key === "NAME") { d.name = val.slice(0, MAX_NAME); d.found = true; }
-      else if (key === "ID") { d.id = val.slice(0, 9); d.found = true; }
-      else if (key === "CATEGORY") { d.category = val.slice(0, 29); d.found = true; }
-      else if (key === "LIKELY") { d.likely = val.slice(0, 49); d.found = true; }
-      else if (key === "SYMPTOMS") {
-        d.found = true;
-        val.split(",").forEach(function (s) {
-          s = s.trim().slice(0, MAX_SYMPTOM_LEN);
-          if (s && d.symptoms.length < MAX_SYMPTOMS) d.symptoms.push(s);
-        });
-      }
+      if (eq < 1 || (sawBlock && !inBlock)) return;
+      readField(d, line.slice(0, eq).trim().toUpperCase(), line.slice(eq + 1).trim());
     });
-    return d;
+    if (!sawBlock && d.found) list.push(d);
+    return list;
   }
 
   /* An ID already on the board (waiting, admitted or discharged) cannot be imported a second time. */
@@ -162,31 +176,44 @@
     return S.records.some(function (r) { return r.id.toLowerCase() === id.toLowerCase(); });
   }
 
+  /* A patient can be imported when it has a name and its ID is not on the board yet. */
+  function importable(d) { return !!d.name && !(d.id && idExists(d.id)); }
+
   function renderImportPreview() {
-    var d = parseProlog($("i-text").value), out = $("i-parsed"), dup = false;
-    if (!d.found) {
-      out.innerHTML = '<p class="muted">Choose a file or load the example to see the patient in it.</p>';
+    var list = parseProlog($("i-text").value), out = $("i-parsed");
+    if (!list.length) {
+      out.innerHTML = '<p class="muted">Choose a file or load the example to see the patients in it.</p>';
     } else {
-      dup = !!d.id && idExists(d.id);
-      var r = computePriority({ symptoms: d.symptoms, visible: [], likely: d.likely });
-      out.innerHTML = '<div class="item' + (dup || !d.name ? " bad" : "") + '"><div class="top"><strong>' + esc(d.name || "No NAME in this file") + "</strong>" + chip(r.priority) + '</div><span class="sub">' +
-        esc((d.id || pad(S.nextArrival)) + " · " + (d.likely ? "Likely: " + human(d.likely) : (d.category || "no condition")) + " · " + (d.symptoms.length ? d.symptoms.map(human).join(", ") : "no symptoms")) +
-        " · " + esc(r.why) + "</span>" +
-        (!d.name ? '<span class="sub">Add a NAME= line to the Prolog file to import this patient.</span>' : "") +
-        (dup ? '<span class="sub">ID ' + esc(d.id) + " is already in the records, so it cannot be imported again.</span>" : "") + "</div>";
+      out.innerHTML = list.map(function (d) {
+        var dup = !!d.id && idExists(d.id);
+        var r = computePriority({ symptoms: d.symptoms, visible: [], likely: d.likely, highRisk: d.highRisk });
+        return '<div class="item' + (dup || !d.name ? " bad" : "") + '"><div class="top"><strong>' + esc(d.name || "No NAME in this record") + "</strong>" + chip(r.priority) + '</div><span class="sub">' +
+          esc((d.id || pad(S.nextArrival)) + " · " + (d.likely ? "Likely: " + human(d.likely) : (d.category || "no condition")) + " · " + (d.symptoms.length ? d.symptoms.map(human).join(", ") : "no symptoms")) +
+          " · " + esc(r.why) + "</span>" +
+          (!d.name ? '<span class="sub">Add a NAME= line to import this patient.</span>' : "") +
+          (dup ? '<span class="sub">ID ' + esc(d.id) + " is already in the records.</span>" : "") + "</div>";
+      }).join("");
     }
-    $("i-submit").disabled = !d.found || !d.name || dup || S.records.length >= MAX_PATIENTS;
+    var ready = list.filter(importable).length;
+    $("i-submit").textContent = ready > 1 ? "Import " + ready + " patients" : "Import patient";
+    $("i-submit").disabled = !ready || S.records.length >= MAX_PATIENTS;
   }
 
   function submitImport() {
-    var d = parseProlog($("i-text").value), name = d.name;
-    if (!d.found) { toast("No patient data was found in the file.", true); return; }
-    if (!name) { toast("No NAME= line was found in the file.", true); return; }
-    if (d.id && idExists(d.id)) { toast("Patient " + d.id + " is already in the records.", true); return; }
-    var res = addRecord({ id: d.id, name: name, category: d.category, likely: d.likely, symptoms: d.symptoms });
-    if (res.ok) { $("i-text").value = ""; $("i-file").value = ""; }
+    var list = parseProlog($("i-text").value);
+    if (!list.length) { toast("No patient data was found in the file.", true); return; }
+    var ready = list.filter(importable), added = [], last;
+    ready.forEach(function (d) {
+      last = addRecord({ id: d.id, name: d.name, category: d.category, likely: d.likely, highRisk: d.highRisk, symptoms: d.symptoms });
+      if (last.ok) added.push(last.p);
+    });
+    if (added.length) { $("i-text").value = ""; $("i-file").value = ""; }
     renderAll();
-    report(res, res.ok ? "Imported " + res.p.name + " (" + res.p.id + ") with Priority " + res.p.priority + "." : "");
+    if (!ready.length) { toast("Every patient in the file is already in the records or has no NAME.", true); return; }
+    if (!added.length) { report(last, ""); return; }
+    toast(added.length === 1
+      ? "Imported " + added[0].name + " (" + added[0].id + ") with Priority " + added[0].priority + "."
+      : "Imported " + added.length + " patients. " + (list.length - added.length) + " skipped.");
   }
 
   /* ---------- Add patient (add_patient_manual) ---------- */
@@ -268,7 +295,7 @@
     var pick = -1;
     for (var k = 0; k < EXAMPLES.length; k++) {
       var j = (exCursor + k) % EXAMPLES.length;
-      if (!idExists(parseProlog(EXAMPLES[j]).id)) { pick = j; break; }
+      if (!idExists(parseProlog(EXAMPLES[j])[0].id)) { pick = j; break; }
     }
     if (pick === -1) { toast("All the example patients are already imported.", true); return; }
     exCursor = (pick + 1) % EXAMPLES.length;

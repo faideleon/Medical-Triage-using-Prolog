@@ -1,8 +1,8 @@
 % WEB SERVER
-% The web page (public/) talks to Prolog through this server.
+% The web page (prolog/web/) talks to Prolog through this server.
 %
 % Start it from the project root folder:
-%   swipl private/server.pl
+%   swipl prolog/server.pl
 % then open http://localhost:8000/ (Ctrl+C stops it)
 %
 % The web page uses two APIs:
@@ -23,18 +23,18 @@
 :- http_handler(root(api/save), handle_save, [method(post)]).
 :- http_handler(root(.), serve_public, [prefix]).
 
-% private_dir(Dir): the folder this file is in, saved when it loads.
-:- dynamic private_dir/1.
+% prolog_dir(Dir): the folder this file is in, saved when it loads.
+:- dynamic prolog_dir/1.
 :- prolog_load_context(directory, Dir),
-   retractall(private_dir(_)), assertz(private_dir(Dir)).
+   retractall(prolog_dir(_)), assertz(prolog_dir(Dir)).
 
 
 start_server(Port) :-
 	http_server(http_dispatch, [port(Port)]).
 
-% Runs when the file is started with "swipl private/server.pl".
+% Runs when the file is started with "swipl prolog/server.pl".
 % Starts the server and keeps it running until Ctrl+C.
-% Another port can be given at the end: swipl private/server.pl 8080
+% Another port can be given at the end: swipl prolog/server.pl 8080
 :- initialization(main, main).
 
 main :-
@@ -47,11 +47,11 @@ main :-
 	format("Server running at http://localhost:~w/~n", [Port]),
 	thread_get_message(_).
 
-% Sends the files in public/ (index.html, app.js) to the browser.
+% Sends the files in prolog/web/ (index.html, app.js) to the browser.
 serve_public(Request) :-
-	private_dir(PrivateDir),
-	atom_concat(PrivateDir, '/../public', PublicDir),
-	http_reply_from_files(PublicDir, [indexes(['index.html'])], Request).
+	prolog_dir(PrologDir),
+	atom_concat(PrologDir, '/web', WebDir),
+	http_reply_from_files(WebDir, [indexes(['index.html'])], Request).
 
 
 % ---------- The categories on the web page ----------
