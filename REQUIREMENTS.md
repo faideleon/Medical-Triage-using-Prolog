@@ -1,155 +1,154 @@
 # Requirements Checklist
 
-Checked against `main` (commit `13ba5f6`).
-`[x]` = done in the code now. `[ ]` = not done yet, or only partly done (see the note).
+`[x]` = done. `[ ]` = not done yet.
 
-The two programs share one file, `data/intake_records.txt`, in the format in
-[docs/INTAKE_FILE_FORMAT.md](docs/INTAKE_FILE_FORMAT.md). Prolog writes it, C reads it.
+**How the two parts work together:** the Prolog part asks the patient's
+symptoms and saves the patient in `data/intake_records.txt`. The C part
+opens that file, puts the patients in line and gives them beds.
+How the file looks is explained in [docs/INTAKE_FILE_FORMAT.md](docs/INTAKE_FILE_FORMAT.md).
 
----
-
-## Part A: Prolog (intake and symptom checker)
-
-### A1. Knowledge base (`prolog/knowledge.pl`)
-- [x] Only facts in this file; the rules are in `triage.pl`
-- [x] 4 body-area categories: `category(Id, Label)`
-- [x] Conditions with category and symptom list: `condition(Name, Category, Symptoms)`
-- [x] A staff triage note for every condition: `description(Name, Text)`
-- [x] Expected hospital resources for every condition: `resources(Name, List)`
-- [x] High-risk symptoms list: `high_risk_symptom/1`
-- [x] High-risk conditions list: `high_risk_condition/1`
-- [x] Emergency signs (ESI 1) with staff questions: `emergency_sign(Id, Question)`
-- [ ] Every `condition/3` has a matching `description/2` and `resources/2` (no automatic check yet)
-- [ ] Medical content reviewed by a doctor or nurse (the file says this is still needed)
-
-### A2. Rules (`prolog/triage.pl`)
-- [x] `has_symptom/2`: a symptom belongs to a condition
-- [x] `match_count/3`: how many of a condition's symptoms the patient has
-- [x] `likely_conditions/2`: top 3 matches, most matching symptoms first, at least 1 match
-- [x] `best_condition/2`: first match, or `none` when nothing matched
-- [x] `condition_category/2`: `unknown` when the condition is `none`
-- [x] `high_risk/1`: any high-risk symptom, or all symptoms of a high-risk condition
-- [x] `resource_count/2`: number of resources, `0` for `none`
-- [x] Prolog does not decide the ESI level (left to C)
-
-### A3. Web server (`prolog/server.pl`)
-- [x] Starts with `swipl prolog/server.pl`, default port 8000
-- [x] Another port can be given: `swipl prolog/server.pl 8080`
-- [x] Serves the page in `prolog/web/` at `/`
-- [x] Works when started from any folder (paths come from the file's own folder)
-- [x] `POST /api/triage`: takes the category and answers, returns the conditions that still fit plus the high-risk symptom list
-- [x] A condition fits when it has every "yes" symptom and none of the "no" symptoms
-- [x] Page categories map to knowledge-base categories (`fever`, `stomach` (also skin/eyes), `body`, `extended` = all)
-- [x] `POST /api/save`: takes name, age, answers; saves the patient; returns ID, condition, possible conditions, high-risk, resources
-- [ ] Server checks the input (empty name, age not a number, unknown symptom) instead of trusting the page
-- [ ] Emergency signs are served to the page (the facts exist but no API uses them)
-
-### A4. Intake file writer (`prolog/records.pl`)
-- [x] Writes to `data/intake_records.txt` and creates `data/` if missing
-- [x] Only appends; never changes or deletes old patients
-- [x] One `BEGIN` … `END` block per patient
-- [x] Adds `ID` (counts up from 1) and `ARRIVED` (`YYYY-MM-DD HH:MM:SS`)
-- [x] Writes `NAME`, `AGE`, `CATEGORY`, `SYMPTOMS`, `CONDITION`, `POSSIBLE_CONDITIONS`, `HIGH_RISK`, `RESOURCES`
-- [x] Lists are written comma-separated with no spaces
-- [ ] Two saves at the same moment cannot get the same `ID` (no locking now)
-- [ ] A name with a newline or `=` cannot break the file format
-
-### A5. Intake web page (`prolog/web/`)
-- [x] Plain HTML/CSS/JS, no build step, no framework
-- [x] Nurse picks a complaint category to start
-- [x] Asks one yes/no symptom question at a time
-- [x] Next question comes from the conditions that still fit (order from the `.pl` file)
-- [x] Keeps asking while similar conditions still have unasked symptoms
-- [x] Live list of remaining conditions with their triage notes
-- [x] High-risk findings are shown as soon as they are answered
-- [x] Undo the last answer
-- [x] End the questions early
-- [x] Keyboard: `Y` yes, `N` no, `U` undo (ignored while typing in a field)
-- [x] A fast double key press cannot record the same answer twice
-- [x] Name and age are required before saving, with an error message
-- [x] Shows the saved result (patient number, condition, high-risk, resources)
-- [x] "Next patient" clears everything for a new intake
-- [x] Clinical wording for the nurse; results are a working impression, not a diagnosis
-- [ ] Emergency signs asked first, stopping the questions when one is present
-
-### A6. Terminal symptom checker (`prolog/conditions.pl`)
-- [x] Runs with `swipl prolog/conditions.pl`, then `start.`
-- [x] Asks yes/no questions per category and lists the matching conditions
-- [ ] Uses the same facts as `knowledge.pl` (it has its own copy of the conditions)
+**Words used here:**
+- **Priority** – how fast the patient must be seen. 1 = right now, 5 = can wait.
+- **ESI** – the hospital's 1 to 5 scale for priority.
+- **High-risk** – a sign that the patient should not wait in line.
 
 ---
 
-## Part B: C (triage, queue and beds)
+## Part A: Prolog
+
+### A1. The list of illnesses (`prolog/knowledge.pl`)
+- [x] 4 groups of illnesses (fever and breathing, stomach, skin and eyes, heart and brain)
+- [x] Each illness has its group and its list of symptoms
+- [x] Each illness has a short note for the nurse
+- [x] Each illness says what the hospital will need (lab test, x-ray, IV...)
+- [x] A list of high-risk symptoms
+- [x] A list of high-risk illnesses
+- [x] A list of emergency signs (patient needs help right now)
+- [ ] A check that no illness is missing its note or its needs list
+- [ ] A doctor or nurse has checked the medical facts
+
+### A2. The rules (`prolog/triage.pl`)
+- [x] Finds the 3 illnesses that match the most symptoms
+- [x] Picks the best match, or says `none` if nothing matches
+- [x] Says the patient is high-risk if they have a high-risk symptom, or all the symptoms of a high-risk illness
+- [x] Counts what the hospital will need for the best match (0 if `none`)
+- [x] Does **not** set the priority (the C part does that)
+
+### A3. The server (`prolog/server.pl`)
+- [x] Starts with `swipl prolog/server.pl` on port 8000
+- [x] Can use another port: `swipl prolog/server.pl 8080`
+- [x] Shows the intake page at http://localhost:8000/
+- [x] Works no matter which folder you start it from
+- [x] Tells the page which illnesses still match the answers so far
+- [x] An illness still matches if it has every "yes" symptom and no "no" symptom
+- [x] Saves the patient and sends back the patient number and results
+- [ ] Checks that the name is not empty and the age is a number
+- [ ] Sends the emergency signs to the page (the list exists but is not used)
+
+### A4. Saving patients (`prolog/records.pl`)
+- [x] Saves to `data/intake_records.txt` and makes the `data/` folder if needed
+- [x] Only adds new patients at the end; never changes old ones
+- [x] Each patient starts with `BEGIN` and ends with `END`
+- [x] Gives each patient a number (1, 2, 3...) and the time they were saved
+- [x] Saves name, age, group, symptoms, best match, top 3 matches, high-risk, and hospital needs
+- [ ] Two patients saved at the exact same time cannot get the same number
+- [ ] A name with `=` or a line break cannot break the file
+
+### A5. The intake page (`prolog/web/`)
+- [x] Simple HTML, CSS and JavaScript (nothing to install)
+- [x] The nurse picks a group to start
+- [x] Asks one yes/no question at a time
+- [x] Only asks about symptoms of illnesses that still match
+- [x] Shows the illnesses that still match, with the nurse notes
+- [x] Shows high-risk signs as soon as they are answered
+- [x] Can undo the last answer
+- [x] Can stop the questions early
+- [x] Keys: `Y` = yes, `N` = no, `U` = undo
+- [x] Pressing a key twice fast does not save the answer twice
+- [x] Name and age must be filled in before saving
+- [x] Shows the result after saving (patient number, best match, high-risk)
+- [x] "Next patient" clears the page
+- [x] The result is a guess to help the nurse, not a diagnosis
+- [ ] Asks the emergency signs first, and stops if one is found
+
+### A6. Terminal version (`prolog/conditions.pl`)
+- [x] Runs with `swipl prolog/conditions.pl`, then type `start.`
+- [x] Asks yes/no questions and shows the matching illnesses
+- [ ] Uses the same illness list as `knowledge.pl` (it has its own copy now)
+
+---
+
+## Part B: C
 
 ### B1. Terminal program (`c/triage.c`)
 
-**Build and run**
-- [x] Builds with `gcc c/triage.c -o triage`
-- [x] Menu: add, import, show queue, admit, discharge, search, occupancy, exit
+**Running it**
+- [x] Build with `gcc c/triage.c -o triage`
+- [x] Menu: add, import, show line, admit, discharge, search, beds, exit
 
-**Data structures**
-- [x] Patient records in an array (max 100)
-- [x] Waiting queue as a linked list sorted by priority
-- [x] Patient status: waiting, admitted, discharged
-- [x] Queue memory is freed on exit
+**How it keeps patients**
+- [x] Keeps up to 100 patients
+- [x] The waiting line is a linked list, ordered by priority
+- [x] Each patient is waiting, admitted or discharged
+- [x] Frees memory when the program closes
 
 **Import from Prolog (menu 2)**
-- [x] Default file `data/intake_records.txt`; also tries `../data/...` when run from `c/`
-- [x] Reads line by line with `fgets`, removes `\n` and `\r`
-- [x] Each `BEGIN` … `END` block is one patient; all blocks are imported
-- [x] Splits each line at the first `=`, so values can have spaces
-- [x] Reads `ID`, `NAME`, `AGE`, `CATEGORY`, `CONDITION` (or old `LIKELY`), `HIGH_RISK`, `SYMPTOMS`
-- [x] Unknown keys are ignored
-- [x] `ID=3` is shown as `PL-003`
-- [x] A patient already on the board is skipped, so the file can be imported again for new arrivals
+- [x] Press Enter to use `data/intake_records.txt`
+- [x] Also finds the file when run from inside the `c/` folder
+- [x] Reads every patient from `BEGIN` to `END`
+- [x] Names with spaces are read correctly
+- [x] Reads number, name, age, group, best match, high-risk and symptoms
+- [x] Skips lines it does not know
+- [x] Shows patient 3 as `PL-003`
+- [x] Skips patients already imported, so you can import the same file again for new patients
 - [x] Asks for the name only if the file has none
-- [x] Older format (no `BEGIN`/`END`) is read as one patient
-- [x] Reports how many were imported and skipped
-- [ ] Uses `ARRIVED` for first come, first served (uses import order now)
-- [ ] Uses `RESOURCES` for the ESI level
-- [ ] Uses or shows `POSSIBLE_CONDITIONS`
+- [x] Can still read the old file style (one patient, no `BEGIN`/`END`)
+- [x] Says how many were imported and how many were skipped
+- [ ] Uses the saved time for "first come, first served" (uses import order now)
+- [ ] Uses the hospital needs count
+- [ ] Shows the top 3 matches
 
 **Priority**
-- [x] Emergency condition (stroke, sepsis, meningitis, ...) gives priority 1
-- [x] `HIGH_RISK=YES` gives at least priority 2
-- [x] Any symptoms give priority 4, nothing gives 5
-- [x] Visible conditions entered by staff can raise the priority
-- [x] Same priority: earlier arrival goes first
-- [ ] ESI steps from the format doc: 1 life-saving, 2 high risk, then resources 0 → 5, 1 → 4, 2+ → 3
-- [ ] `CONDITION=none` treated as ESI 3 to be safe
-- [ ] Emergency list kept in step with `high_risk_condition/1` in Prolog (it is a hand-copied subset now)
+- [x] A deadly illness (stroke, sepsis, meningitis...) = priority 1
+- [x] High-risk = priority 2 or higher
+- [x] Has symptoms = priority 4; nothing = priority 5
+- [x] Things the staff can see (heavy bleeding, broken leg...) can raise the priority
+- [x] Same priority: whoever came first goes first
+- [ ] Uses the hospital needs count: 0 needs = 5, 1 need = 4, 2 or more = 3
+- [ ] No match (`none`) = priority 3, to be safe
+- [ ] Deadly illness list matches the Prolog high-risk list (it is copied by hand now)
 
-**Manual add, beds and search**
-- [x] Add a patient by hand with symptoms and visible conditions
-- [x] Admit the head of the queue only when a bed is free (capacity 5)
-- [x] Discharge an admitted patient
-- [x] Search patients by name, ignoring case
-- [x] Show occupancy: beds in use, waiting, discharged
+**Beds and search**
+- [x] Add a patient by typing their details
+- [x] Admit the first patient in line, only if a bed is free (5 beds)
+- [x] Discharge a patient
+- [x] Search by name (small or capital letters both work)
+- [x] Show beds used, patients waiting and patients discharged
 
-**Robustness**
-- [ ] Menu and number inputs handle letters without looping or breaking (`scanf("%d")` now)
-- [ ] `malloc` result is checked
-- [ ] Records are saved between runs (all data is lost on exit now)
+**Safety**
+- [ ] Typing a letter in the menu does not break the program
+- [ ] Checks that memory was given before using it
+- [ ] Keeps the patients after the program closes (all lost now)
 
 ### B2. Web board (`c/web/`)
-- [x] Opens straight from `c/web/index.html`, no server needed
-- [x] Same priority rules as `compute_priority()`, and shows the reason
-- [x] Same queue order as `insert_to_queue()`
-- [x] Import by choosing the intake file or pasting it, with a preview before importing
-- [x] Preview marks records with no name or an ID already on the board
-- [x] Manual add form with symptoms and visible conditions
-- [x] Bed map with numbered beds; admit next and discharge from a bed
+- [x] Open `c/web/index.html` in a browser (no server needed)
+- [x] Same priority rules as the C program, and shows why
+- [x] Same line order as the C program
+- [x] Import by choosing the file or pasting it, and see the patients first
+- [x] Marks patients with no name, or already on the board
+- [x] Form to add a patient by hand
+- [x] Bed map: admit the next patient and discharge from a bed
 - [x] Search by name
-- [x] Stats: beds in use, waiting, discharged
+- [x] Shows beds used, waiting and discharged
 - [x] Same limits as the C program (100 patients, 5 beds, 10 symptoms)
-- [ ] Board stays after a page reload
-- [ ] Same gaps as B1: `ARRIVED`, `RESOURCES` and ESI steps not used yet
+- [ ] Keeps the board after the page is refreshed
+- [ ] Same missing items as B1 (saved time, hospital needs count)
 
 ---
 
-## Part C: Shared (both sides)
-- [x] File format written down in `docs/INTAKE_FILE_FORMAT.md`
-- [x] README explains how to run both programs from the project root
-- [x] `data/` is not in git
-- [ ] Automated tests for the Prolog rules and the C file reader
-- [ ] One test intake file that both C and the C web board are checked against
+## Part C: Both parts
+- [x] The file format is written down in `docs/INTAKE_FILE_FORMAT.md`
+- [x] The README says how to run both parts
+- [x] The `data/` folder is not saved in git
+- [ ] Tests for the Prolog rules and the C file reader
+- [ ] One sample file to test both the C program and the web board
