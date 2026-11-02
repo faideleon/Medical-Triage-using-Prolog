@@ -55,8 +55,8 @@ END
 
 ## How the C program reads it now
 
-`c/triage.c` (menu option 2) and the `c/web/` page both read this
-file the same way:
+`parse_intake()` in `c/hospital.c` reads this file. The terminal program
+(`c/triage.c`, menu option 2) and the C web server (`c/server.c`) both use it:
 
 - Every `BEGIN`…`END` block is one patient; all of them are imported.
 - `ID=3` is shown as `PL-003`. A patient whose ID is already on the board is

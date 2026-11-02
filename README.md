@@ -14,8 +14,10 @@ prolog/            Prolog side
   conditions.pl    standalone terminal symptom checker
   web/             intake web page served by server.pl
 c/                 C side
-  triage.c         C triage program: waiting queue, priority and beds
-  web/             web version of the C triage program
+  hospital.c/.h    the triage rules: priority, waiting queue, beds, reading the file
+  triage.c         terminal program (menu) that uses hospital.c
+  server.c         web server that uses hospital.c
+  web/             triage board page served by server.c
 data/              the file Prolog writes and C reads (not in git)
 docs/              file format between Prolog and C
 ```
@@ -30,11 +32,20 @@ Run everything from the project root folder.
    ```
    (Another port: `swipl prolog/server.pl 8080`.)
 2. Open <http://localhost:8000/>, answer the questions, then type the patient's name and age and save.
-3. Run the C program and choose **2. Import patients** (press Enter for the default file):
+3. Run the C side. Either one works; both use the same rules in `hospital.c`.
+
+   **Web board** – start the C server:
    ```
-   gcc c/triage.c -o triage
+   gcc c/server.c c/hospital.c -o triage-server -lws2_32
+   ./triage-server
+   ```
+   (On Linux or Mac leave out `-lws2_32`. Another port: `./triage-server 8081`.)
+   Open <http://localhost:8001/>, click **Load data/intake_records.txt**, then **Import**.
+
+   **Terminal** – choose **2. Import patients** (press Enter for the default file):
+   ```
+   gcc c/triage.c c/hospital.c -o triage
    ./triage
    ```
-   Or open `c/web/index.html` in a browser and import `data/intake_records.txt`.
 
 The terminal symptom checker: `swipl prolog/conditions.pl`, then `start.`

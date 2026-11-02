@@ -3,164 +3,24 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_PATIENTS 100
-#define HOSPITAL_CAPACITY 5
-#define MAX_SYMPTOMS 10
-#define MAX_VISIBLE 5
-#define NUM_VISIBLE_CONDITIONS 7
-#define INTAKE_FILE "data/intake_records.txt"
-#define LINE_LEN 512
+#include "hospital.h"
 
-#define PRIORITY_CRITICAL 1
-#define PRIORITY_EMERGENT 2
-#define PRIORITY_URGENT 3
-#define PRIORITY_LESS_URGENT 4
-#define PRIORITY_NON_URGENT 5
+/* Terminal menu for the triage. The rules (priority, queue, beds, reading
+   the Prolog file) are in hospital.c, shared with the web server. */
 
-typedef enum {
-    STATUS_WAITING,
-    STATUS_ADMITTED,
-    STATUS_DISCHARGED
-} PatientStatus;
-
-typedef struct {
-    char name[30];
-    int priority;
-} VisibleCondition;
-
-typedef struct {
-    char id[10];
-    char name[50];
-    char category[30];
-    char likely_condition[50];
-    int age;
-    int high_risk;
-    char symptoms[MAX_SYMPTOMS][30];
-    int symptom_count;
-    int visible[MAX_VISIBLE];
-    int visible_count;
-    int priority;
-    PatientStatus status;
-    int arrival_no;
-} Patient;
-
-/* Linked List Node for Waiting Queue */
-typedef struct QueueNode {
-    int record_index;
-    struct QueueNode *next;
-} QueueNode;
-
-typedef struct {
-    QueueNode *head;
-    int length;
-} WaitingQueue;
-
-typedef struct {
-    Patient records[MAX_PATIENTS];
-    int record_count;
-    int next_arrival_no;
-    WaitingQueue queue;
-} Hospital;
-
-/* Visible conditions array */
-VisibleCondition VISIBLE_CONDITIONS[NUM_VISIBLE_CONDITIONS] = {
-    {"Heavy bleeding", PRIORITY_CRITICAL},
-    {"Unconscious", PRIORITY_CRITICAL},
-    {"Severe burn", PRIORITY_EMERGENT},
-    {"Broken leg", PRIORITY_URGENT},
-    {"Deep cut", PRIORITY_URGENT},
-    {"Sprained joint", PRIORITY_LESS_URGENT},
-    {"Minor scrape", PRIORITY_NON_URGENT}
-};
-
-/* Emergency list from Prolog */
-char *EMERGENCY_CONDITIONS[] = {
-    "stroke", "sepsis", "meningitis", "meningococcemia",
-    "ischemic_heart_disease", "diphtheria", "rabies", "tetanus"
-};
-int NUM_EMERGENCY = 8;
-
-/* Helper to compare strings without case sensitivity */
-int equals_ignore_case(const char *a, const char *b) {
-    while (*a != '\0' && *b != '\0') {
-        if (tolower((unsigned char)*a) != tolower((unsigned char)*b)) {
-            return 0;
-        }
-        a++;
-        b++;
+/* Read a whole number from the user. Letters count as -1 instead of
+   breaking the menu. */
+int read_number(void) {
+    char line[32];
+    if (fgets(line, sizeof(line), stdin) == NULL) {
+        return 0; // input closed: act like "0"
     }
-    return *a == *b;
-}
-
-/* Check if condition is in emergency list */
-int is_emergency(const char *condition) {
-    for (int i = 0; i < NUM_EMERGENCY; i++) {
-        if (equals_ignore_case(condition, EMERGENCY_CONDITIONS[i])) {
-            return 1;
-        }
+    char *end;
+    long value = strtol(line, &end, 10);
+    if (end == line) {
+        return -1;
     }
-    return 0;
-}
-
-/* Calculate priority score (1 to 5) */
-int compute_priority(Patient *p) {
-    int best = PRIORITY_NON_URGENT;
-
-    if (p->symptom_count > 0) {
-        best = PRIORITY_LESS_URGENT;
-    }
-
-    /* Prolog flags high-risk signs (HIGH_RISK=YES): never below Emergent */
-    if (p->high_risk && PRIORITY_EMERGENT < best) {
-        best = PRIORITY_EMERGENT;
-    }
-
-    if (is_emergency(p->likely_condition)) {
-        best = PRIORITY_CRITICAL;
-    }
-
-    for (int i = 0; i < p->visible_count; i++) {
-        int level = VISIBLE_CONDITIONS[p->visible[i]].priority;
-        if (level < best) {
-            best = level;
-        }
-    }
-    return best;
-}
-
-/* Insert patient into linked list queue sorted by priority */
-void insert_to_queue(Hospital *h, int rec_index) {
-    QueueNode *new_node = (QueueNode *)malloc(sizeof(QueueNode));
-    new_node->record_index = rec_index;
-    new_node->next = NULL;
-
-    Patient *new_p = &h->records[rec_index];
-
-    // If queue is empty or new patient has higher priority than head
-    if (h->queue.head == NULL) {
-        h->queue.head = new_node;
-    } else {
-        Patient *head_p = &h->records[h->queue.head->record_index];
-        
-        if (new_p->priority < head_p->priority || 
-           (new_p->priority == head_p->priority && new_p->arrival_no < head_p->arrival_no)) {
-            new_node->next = h->queue.head;
-            h->queue.head = new_node;
-        } else {
-            QueueNode *curr = h->queue.head;
-            while (curr->next != NULL) {
-                Patient *next_p = &h->records[curr->next->record_index];
-                if (new_p->priority < next_p->priority || 
-                   (new_p->priority == next_p->priority && new_p->arrival_no < next_p->arrival_no)) {
-                    break;
-                }
-                curr = curr->next;
-            }
-            new_node->next = curr->next;
-            curr->next = new_node;
-        }
-    }
-    h->queue.length++;
+    return (int)value;
 }
 
 /* Display linked list queue */
@@ -226,10 +86,8 @@ void add_patient_manual(Hospital *h) {
     }
 
     while (p.visible_count < MAX_VISIBLE) {
-        int choice;
         printf("Select visible condition (0 to finish): ");
-        scanf("%d", &choice);
-        getchar(); // clear newline
+        int choice = read_number();
 
         if (choice == 0) break;
         if (choice >= 1 && choice <= NUM_VISIBLE_CONDITIONS) {
@@ -238,97 +96,14 @@ void add_patient_manual(Hospital *h) {
         }
     }
 
-    sprintf(p.id, "P%03d", h->next_arrival_no);
-    p.arrival_no = h->next_arrival_no++;
-    p.status = STATUS_WAITING;
-    p.priority = compute_priority(&p);
-
-    int index = h->record_count;
-    h->records[index] = p;
-    h->record_count++;
-
-    insert_to_queue(h, index);
-    printf("\nAdded %s (%s) with Priority %d.\n", p.name, p.id, p.priority);
-}
-
-/* Check if a patient ID is already in the records */
-int id_exists(Hospital *h, const char *id) {
-    for (int i = 0; i < h->record_count; i++) {
-        if (equals_ignore_case(h->records[i].id, id)) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-/* Read one KEY=value line from the Prolog file into the patient.
-   The keys are explained in docs/INTAKE_FILE_FORMAT.md. */
-void read_field(Patient *p, const char *key, char *val) {
-    if (equals_ignore_case(key, "ID")) {
-        // Prolog numbers patients 1, 2, 3...; show them as PL-001
-        if (val[0] != '\0' && strspn(val, "0123456789") == strlen(val)) {
-            snprintf(p->id, sizeof(p->id), "PL-%03d", atoi(val));
-        } else {
-            snprintf(p->id, sizeof(p->id), "%s", val);
-        }
-    } else if (equals_ignore_case(key, "NAME")) {
-        snprintf(p->name, sizeof(p->name), "%s", val);
-    } else if (equals_ignore_case(key, "AGE")) {
-        p->age = atoi(val);
-    } else if (equals_ignore_case(key, "CATEGORY")) {
-        snprintf(p->category, sizeof(p->category), "%s", val);
-    } else if (equals_ignore_case(key, "CONDITION") || equals_ignore_case(key, "LIKELY")) {
-        // "none" means Prolog found no matching condition
-        if (!equals_ignore_case(val, "none")) {
-            snprintf(p->likely_condition, sizeof(p->likely_condition), "%s", val);
-        }
-    } else if (equals_ignore_case(key, "HIGH_RISK")) {
-        p->high_risk = equals_ignore_case(val, "YES");
-    } else if (equals_ignore_case(key, "SYMPTOMS")) {
-        char *token = strtok(val, ",");
-        while (token != NULL && p->symptom_count < MAX_SYMPTOMS) {
-            snprintf(p->symptoms[p->symptom_count], sizeof(p->symptoms[0]), "%s", token);
-            p->symptom_count++;
-            token = strtok(NULL, ",");
-        }
+    int index = add_patient(h, &p);
+    if (index >= 0) {
+        Patient *added = &h->records[index];
+        printf("\nAdded %s (%s) with Priority %d.\n", added->name, added->id, added->priority);
     }
 }
 
-/* Add one patient read from the Prolog file to the records and the queue.
-   Returns 1 if added, 0 if it was skipped. */
-int add_imported(Hospital *h, Patient *p) {
-    if (p->id[0] != '\0' && id_exists(h, p->id)) {
-        return 0; // already imported earlier
-    }
-    if (h->record_count >= MAX_PATIENTS) {
-        printf("Records array is full.\n");
-        return 0;
-    }
-
-    if (p->name[0] == '\0') {
-        printf("Enter patient name for imported record: ");
-        fgets(p->name, sizeof(p->name), stdin);
-        p->name[strcspn(p->name, "\n")] = 0;
-    }
-    if (p->id[0] == '\0') {
-        sprintf(p->id, "P%03d", h->next_arrival_no);
-    }
-    p->arrival_no = h->next_arrival_no++;
-    p->status = STATUS_WAITING;
-    p->priority = compute_priority(p);
-
-    int index = h->record_count;
-    h->records[index] = *p;
-    h->record_count++;
-
-    insert_to_queue(h, index);
-    printf("Imported %s (%s) with Priority %d.\n", p->name, p->id, p->priority);
-    return 1;
-}
-
-/* Import patients from the file Prolog writes.
-   Each patient is a block from BEGIN to END. A file without BEGIN/END
-   lines is read as one patient (the older format). Patients whose ID is
+/* Import patients from the file Prolog writes. Patients whose ID is
    already in the records are skipped, so the same file can be imported
    again to pick up new arrivals. */
 void import_prolog_file(Hospital *h) {
@@ -340,56 +115,44 @@ void import_prolog_file(Hospital *h) {
         strcpy(path, INTAKE_FILE);
     }
 
-    FILE *file = fopen(path, "r");
-    if (file == NULL && strcmp(path, INTAKE_FILE) == 0) {
+    char *text = read_file(path, NULL);
+    if (text == NULL && strcmp(path, INTAKE_FILE) == 0) {
         // run from inside the c/ folder: data/ is one level up
-        file = fopen("../" INTAKE_FILE, "r");
+        text = read_file("../" INTAKE_FILE, NULL);
     }
-    if (file == NULL) {
+    if (text == NULL) {
         printf("Could not open file!\n");
         return;
     }
 
-    Patient p;
-    memset(&p, 0, sizeof(Patient));
+    static Patient found[MAX_PATIENTS];
+    int count = parse_intake(text, found, MAX_PATIENTS);
+    free(text);
 
-    int in_block = 0, saw_block = 0, has_data = 0;
     int imported = 0, skipped = 0;
-    char line[LINE_LEN];
-
     printf("\n");
-    while (fgets(line, sizeof(line), file)) {
-        line[strcspn(line, "\r\n")] = 0;
-
-        if (equals_ignore_case(line, "BEGIN")) {
-            memset(&p, 0, sizeof(Patient));
-            in_block = 1;
-            saw_block = 1;
+    for (int i = 0; i < count; i++) {
+        Patient *p = &found[i];
+        if (p->id[0] != '\0' && id_exists(h, p->id)) {
+            skipped++;
             continue;
         }
-        if (equals_ignore_case(line, "END")) {
-            if (in_block) {
-                if (add_imported(h, &p)) imported++;
-                else skipped++;
-            }
-            in_block = 0;
-            continue;
+        if (h->record_count >= MAX_PATIENTS) {
+            printf("Records array is full.\n");
+            break;
+        }
+        if (p->name[0] == '\0') {
+            printf("Enter patient name for imported record: ");
+            fgets(p->name, sizeof(p->name), stdin);
+            p->name[strcspn(p->name, "\n")] = 0;
         }
 
-        char *equals = strchr(line, '=');
-        if (equals == NULL || (saw_block && !in_block)) {
-            continue; // not a KEY=value line, or outside a block
+        int index = add_patient(h, p);
+        if (index >= 0) {
+            Patient *added = &h->records[index];
+            printf("Imported %s (%s) with Priority %d.\n", added->name, added->id, added->priority);
+            imported++;
         }
-        *equals = '\0';
-        read_field(&p, line, equals + 1);
-        has_data = 1;
-    }
-    fclose(file);
-
-    // Older format: one patient, no BEGIN/END lines
-    if (!saw_block && has_data) {
-        if (add_imported(h, &p)) imported++;
-        else skipped++;
     }
 
     printf("\n%d patient(s) imported, %d skipped (already in the records).\n", imported, skipped);
@@ -397,32 +160,15 @@ void import_prolog_file(Hospital *h) {
 
 /* Admit patient from queue head */
 void admit_next_patient(Hospital *h) {
-    if (h->queue.head == NULL) {
+    int index = admit_next(h);
+    if (index == ADMIT_NOBODY) {
         printf("\nNobody is waiting.\n");
-        return;
-    }
-
-    int admitted_count = 0;
-    for (int i = 0; i < h->record_count; i++) {
-        if (h->records[i].status == STATUS_ADMITTED) {
-            admitted_count++;
-        }
-    }
-
-    if (admitted_count >= HOSPITAL_CAPACITY) {
+    } else if (index == ADMIT_NO_BEDS) {
         printf("\nNo free beds! Hospital is full.\n");
-        return;
+    } else {
+        printf("\nAdmitted %s (%s) to bed %d.\n",
+               h->records[index].name, h->records[index].id, h->records[index].bed);
     }
-
-    QueueNode *node_to_remove = h->queue.head;
-    int index = node_to_remove->record_index;
-
-    h->records[index].status = STATUS_ADMITTED;
-    h->queue.head = h->queue.head->next;
-    free(node_to_remove);
-    h->queue.length--;
-
-    printf("\nAdmitted %s (%s).\n", h->records[index].name, h->records[index].id);
 }
 
 /* Discharge patient */
@@ -431,7 +177,7 @@ void discharge_patient(Hospital *h) {
     printf("\n--- Admitted Patients ---\n");
     for (int i = 0; i < h->record_count; i++) {
         if (h->records[i].status == STATUS_ADMITTED) {
-            printf("%d. %s - %s\n", i + 1, h->records[i].id, h->records[i].name);
+            printf("%d. %s - %s (bed %d)\n", i + 1, h->records[i].id, h->records[i].name, h->records[i].bed);
             shown++;
         }
     }
@@ -441,19 +187,14 @@ void discharge_patient(Hospital *h) {
         return;
     }
 
-    int choice;
     printf("Number to discharge (0 to cancel): ");
-    scanf("%d", &choice);
-    getchar();
+    int choice = read_number();
+    if (choice == 0) return;
 
-    if (choice > 0 && choice <= h->record_count) {
-        int idx = choice - 1;
-        if (h->records[idx].status == STATUS_ADMITTED) {
-            h->records[idx].status = STATUS_DISCHARGED;
-            printf("Patient %s discharged.\n", h->records[idx].id);
-        } else {
-            printf("Invalid selection.\n");
-        }
+    if (discharge(h, choice - 1)) {
+        printf("Patient %s discharged.\n", h->records[choice - 1].id);
+    } else {
+        printf("Invalid selection.\n");
     }
 }
 
@@ -489,26 +230,15 @@ void search_patient(Hospital *h) {
 
 /* Show occupancy status */
 void show_occupancy(Hospital *h) {
-    int admitted = 0;
-    int discharged = 0;
-
-    for (int i = 0; i < h->record_count; i++) {
-        if (h->records[i].status == STATUS_ADMITTED) admitted++;
-        if (h->records[i].status == STATUS_DISCHARGED) discharged++;
-    }
-
     printf("\n=== Hospital Occupancy ===\n");
-    printf("Beds in use : %d / %d\n", admitted, HOSPITAL_CAPACITY);
+    printf("Beds in use : %d / %d\n", count_status(h, STATUS_ADMITTED), HOSPITAL_CAPACITY);
     printf("Waiting     : %d\n", h->queue.length);
-    printf("Discharged  : %d\n", discharged);
+    printf("Discharged  : %d\n", count_status(h, STATUS_DISCHARGED));
 }
 
 int main(void) {
     static Hospital hospital;
-    hospital.record_count = 0;
-    hospital.next_arrival_no = 1;
-    hospital.queue.head = NULL;
-    hospital.queue.length = 0;
+    hospital_init(&hospital);
 
     int choice = -1;
 
@@ -525,8 +255,7 @@ int main(void) {
         printf("7. Show occupancy\n");
         printf("0. Exit\n");
         printf("Choice: ");
-        scanf("%d", &choice);
-        getchar(); // consume newline
+        choice = read_number();
 
         switch (choice) {
             case 1: add_patient_manual(&hospital); break;
@@ -542,12 +271,7 @@ int main(void) {
     }
 
     // Free memory before exit
-    QueueNode *curr = hospital.queue.head;
-    while (curr != NULL) {
-        QueueNode *temp = curr;
-        curr = curr->next;
-        free(temp);
-    }
+    hospital_free(&hospital);
 
     return 0;
 }

@@ -1,72 +1,40 @@
 (function () {
   "use strict";
-  var CAPACITY = 5, MAX_PATIENTS = 100, MAX_SYMPTOMS = 10, MAX_VISIBLE = 5, MAX_NAME = 49, MAX_SYMPTOM_LEN = 29;
-  var VISIBLE = [["Heavy bleeding", 1], ["Unconscious", 1], ["Severe burn", 2], ["Broken leg", 3], ["Deep cut", 3], ["Sprained joint", 4], ["Minor scrape", 5]];
-  var EMERGENCY = ["stroke", "sepsis", "meningitis", "meningococcemia", "ischemic_heart_disease", "diphtheria", "rabies", "tetanus"];
+  /* Every rule (priority, queue, beds, reading the Prolog file) runs in the
+     C server: c/server.c and c/hospital.c. This file only asks it and draws
+     the answer. */
   var LABEL = { 1: "Critical", 2: "Emergent", 3: "Urgent", 4: "Less urgent", 5: "Non-urgent" };
 
-  var S = { records: [], queue: [], nextArrival: 1, sample: true };
-  var A = { symptoms: [], visible: [] };   /* the "Add patient" form */
+  var S = null;                              /* the board, as the C server sent it */
+  var A = { symptoms: [], visible: [] };     /* the "Add patient" form */
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
-  var pad = function (n) { return "P" + String(n).padStart(3, "0"); };
   var human = function (s) { return s.replace(/_/g, " "); };
+  var oneLine = function (s) { return String(s).replace(/[\r\n]+/g, " "); };
   var chip = function (p) { return '<span class="prio p' + p + '"><b>' + p + "</b>" + LABEL[p] + "</span>"; };
   var icon = function (name) { return '<svg class="icon" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; };
 
-  /* Same rules as compute_priority() in the C code, plus the reason that decided it. */
-  function computePriority(p) {
-    var best = 5, why = "No symptoms or visible conditions recorded.";
-    if (p.symptoms.length > 0) { best = 4; why = "Symptoms reported."; }
-    if (p.highRisk && 2 < best) { best = 2; why = "Prolog flagged a high-risk sign."; }
-    if (p.likely && EMERGENCY.indexOf(p.likely.toLowerCase()) !== -1) { best = 1; why = "Likely condition " + human(p.likely) + " is on the emergency list."; }
-    p.visible.forEach(function (i) {
-      if (VISIBLE[i][1] < best) { best = VISIBLE[i][1]; why = VISIBLE[i][0] + " is visible."; }
+  /* ---------- Talking to the C server ---------- */
+  function api(path, body) {
+    var opts = body === undefined ? {} : { method: "POST", headers: { "Content-Type": "text/plain" }, body: body };
+    return fetch(path, opts).then(function (r) {
+      if (!r.ok) throw new Error("The C server answered " + r.status + ".");
+      return r.json();
     });
-    return { priority: best, why: why };
   }
+  function offline() { toast("Cannot reach the C server. Start it with ./triage-server and reload the page.", true); }
 
-  /* Same ordering as insert_to_queue(): lower priority number first, then earlier arrival. */
-  function insertQueue(idx) {
-    var np = S.records[idx], pos = S.queue.length;
-    for (var i = 0; i < S.queue.length; i++) {
-      var q = S.records[S.queue[i]];
-      if (np.priority < q.priority || (np.priority === q.priority && np.arrival < q.arrival)) { pos = i; break; }
-    }
-    S.queue.splice(pos, 0, idx);
-  }
-
-  function addRecord(d) {
-    if (S.records.length >= MAX_PATIENTS) return { ok: false, msg: "Records array is full." };
-    var p = {
-      id: d.id || pad(S.nextArrival), name: d.name, category: d.category || "", likely: d.likely || "",
-      symptoms: d.symptoms.slice(0, MAX_SYMPTOMS), visible: (d.visible || []).slice(0, MAX_VISIBLE),
-      highRisk: !!d.highRisk, status: "waiting", arrival: S.nextArrival++, bed: 0
-    };
-    p.priority = computePriority(p).priority;
-    S.records.push(p);
-    insertQueue(S.records.length - 1);
-    return { ok: true, p: p };
+  /* Run an action, then draw the board and show the message the server sends back. */
+  function act(path, body) {
+    return api(path, body).then(function (res) {
+      S = res.state;
+      renderAll();
+      toast(res.message, !res.ok);
+      return res;
+    }).catch(function () { offline(); return { ok: false }; });
   }
 
   function admittedCount() { return S.records.filter(function (r) { return r.status === "admitted"; }).length; }
-
-  function admitNext() {
-    if (!S.queue.length) return { ok: false, msg: "Nobody is waiting." };
-    if (admittedCount() >= CAPACITY) return { ok: false, msg: "No free beds! Hospital is full." };
-    var idx = S.queue.shift(), p = S.records[idx];
-    var used = S.records.filter(function (r) { return r.status === "admitted"; }).map(function (r) { return r.bed; });
-    for (var b = 1; b <= CAPACITY; b++) { if (used.indexOf(b) === -1) { p.bed = b; break; } }
-    p.status = "admitted";
-    return { ok: true, p: p };
-  }
-
-  function discharge(idx) {
-    var p = S.records[idx];
-    if (!p || p.status !== "admitted") return { ok: false, msg: "Invalid selection." };
-    p.status = "discharged"; p.bed = 0;
-    return { ok: true, p: p };
-  }
 
   /* toast */
   var toastTimer;
@@ -77,22 +45,21 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { $("toast").hidden = true; }, 4200);
   }
-  function report(res, okMsg) { toast(res.ok ? okMsg : res.msg, !res.ok); }
 
   /* render */
   function renderStats() {
-    var a = admittedCount();
+    var a = admittedCount(), cap = S.capacity;
     var dis = S.records.filter(function (r) { return r.status === "discharged"; }).length;
-    $("st-beds").textContent = a + " / " + CAPACITY;
-    var t = ""; for (var i = 0; i < CAPACITY; i++) t += '<i class="' + (i < a ? "on" : "") + '"></i>';
+    $("st-beds").textContent = a + " / " + cap;
+    var t = ""; for (var i = 0; i < cap; i++) t += '<i class="' + (i < a ? "on" : "") + '"></i>';
     $("st-ticks").innerHTML = t;
-    $("beds-meta").textContent = a + " of " + CAPACITY + " in use";
+    $("beds-meta").textContent = a + " of " + cap + " in use";
     $("st-wait").textContent = S.queue.length;
     $("st-dis").textContent = dis;
     $("q-count").textContent = S.queue.length + " waiting";
-    $("admit-btn").disabled = !S.queue.length || a >= CAPACITY;
+    $("admit-btn").disabled = !S.queue.length || a >= cap;
     $("admit-note").textContent = !S.queue.length ? "Nobody is waiting."
-      : a >= CAPACITY ? "No free beds. Discharge a patient to admit the next one."
+      : a >= cap ? "No free beds. Discharge a patient to admit the next one."
       : "Next: " + S.records[S.queue[0]].name + ", priority " + S.records[S.queue[0]].priority + ".";
     $("sample-note").hidden = !S.sample;
   }
@@ -112,166 +79,132 @@
 
   function renderBeds() {
     var html = "";
-    for (var b = 1; b <= CAPACITY; b++) {
-      var idx = -1;
-      S.records.forEach(function (r, i) { if (r.status === "admitted" && r.bed === b) idx = i; });
-      if (idx === -1) {
+    for (var b = 1; b <= S.capacity; b++) {
+      var p = null;
+      S.records.forEach(function (r) { if (r.status === "admitted" && r.bed === b) p = r; });
+      if (!p) {
         html += '<li class="bed free"><div class="bednum"><small>BED</small><b>' + b + '</b></div><div class="who">Free</div></li>';
       } else {
-        var p = S.records[idx];
         html += '<li class="bed"><div class="bednum"><small>BED</small><b>' + b + '</b></div><div class="who"><strong>' + esc(p.name) + '</strong><span class="id">' + esc(p.id) + "</span>" +
-          "<div>" + chip(p.priority) + '</div></div><button class="btn btn-quiet" type="button" data-discharge="' + idx + '">Discharge</button></li>';
+          "<div>" + chip(p.priority) + '</div></div><button class="btn btn-quiet" type="button" data-discharge="' + esc(p.id) + '">Discharge</button></li>';
       }
     }
     $("beds").innerHTML = html;
   }
 
-  /* search_patient(): partial, case-insensitive name match; shows ID, Name, Priority only. */
+  /* search_patient(): partial, case-insensitive name match, done by the C server. */
+  var searchSeq = 0;
   function renderSearch() {
-    var q = $("s-q").value.trim().toLowerCase(), out = $("s-results");
+    if (!S) return;
+    var q = $("s-q").value.trim(), out = $("s-results"), seq = ++searchSeq;
     if (!q) { out.innerHTML = '<p class="hint">Type part of a name to see matching patients.</p>'; return; }
-    var hits = S.records.filter(function (r) { return r.name.toLowerCase().indexOf(q) !== -1; });
-    if (!hits.length) { out.innerHTML = '<p class="hint">No patient found.</p>'; return; }
-    out.innerHTML = '<div class="hits">' + hits.map(function (p) {
-      return '<div class="hit"><dl class="kv"><dt>ID</dt><dd>' + esc(p.id) + "</dd><dt>Name</dt><dd>" + esc(p.name) + "</dd><dt>Priority</dt><dd>" + chip(p.priority) + "</dd><dt>Status</dt><dd>" + esc(p.status === "admitted" ? "Admitted, bed " + p.bed : p.status === "discharged" ? "Discharged" : "Waiting") + "</dd></dl></div>";
-    }).join("") + "</div>";
+    api("/api/search", "NAME=" + oneLine(q)).then(function (res) {
+      if (seq !== searchSeq) return;
+      var hits = res.results;
+      if (!hits.length) { out.innerHTML = '<p class="hint">No patient found.</p>'; return; }
+      out.innerHTML = '<div class="hits">' + hits.map(function (p) {
+        return '<div class="hit"><dl class="kv"><dt>ID</dt><dd>' + esc(p.id) + "</dd><dt>Name</dt><dd>" + esc(p.name) + "</dd><dt>Priority</dt><dd>" + chip(p.priority) + "</dd><dt>Status</dt><dd>" + esc(p.status === "admitted" ? "Admitted, bed " + p.bed : p.status === "discharged" ? "Discharged" : "Waiting") + "</dd></dl></div>";
+      }).join("") + "</div>";
+    }).catch(offline);
   }
 
   function renderAll() { renderStats(); renderQueue(); renderBeds(); renderSearch(); renderImportPreview(); renderAddForm(); }
 
   /* ---------- Import from Prolog (import_prolog_file) ----------
-     Same rules as the C code: each patient is a block from BEGIN to END
-     (the file data/intake_records.txt that Prolog writes). A file without
-     BEGIN/END lines is read as one patient, the older format. */
-  function emptyPatient() {
-    return { name: "", id: "", category: "", likely: "", highRisk: false, symptoms: [], found: false };
-  }
-
-  function readField(d, key, val) {
-    if (key === "NAME") { d.name = val.slice(0, MAX_NAME); }
-    else if (key === "ID") { d.id = /^\d+$/.test(val) ? "PL-" + String(parseInt(val, 10)).padStart(3, "0") : val.slice(0, 9); }
-    else if (key === "CATEGORY") { d.category = val.slice(0, 29); }
-    else if (key === "CONDITION" || key === "LIKELY") { if (val.toLowerCase() !== "none") d.likely = val.slice(0, 49); }
-    else if (key === "HIGH_RISK") { d.highRisk = val.toUpperCase() === "YES"; }
-    else if (key === "SYMPTOMS") {
-      val.split(",").forEach(function (s) {
-        s = s.trim().slice(0, MAX_SYMPTOM_LEN);
-        if (s && d.symptoms.length < MAX_SYMPTOMS) d.symptoms.push(s);
-      });
-    } else { return; }
-    d.found = true;
-  }
-
-  function parseProlog(text) {
-    var list = [], d = emptyPatient(), inBlock = false, sawBlock = false;
-    text.split(/\r?\n/).forEach(function (line) {
-      line = line.trim();
-      if (line.toUpperCase() === "BEGIN") { d = emptyPatient(); inBlock = true; sawBlock = true; return; }
-      if (line.toUpperCase() === "END") { if (inBlock && d.found) list.push(d); inBlock = false; return; }
-      var eq = line.indexOf("=");
-      if (eq < 1 || (sawBlock && !inBlock)) return;
-      readField(d, line.slice(0, eq).trim().toUpperCase(), line.slice(eq + 1).trim());
-    });
-    if (!sawBlock && d.found) list.push(d);
-    return list;
-  }
-
-  /* An ID already on the board (waiting, admitted or discharged) cannot be imported a second time. */
-  function idExists(id) {
-    return S.records.some(function (r) { return r.id.toLowerCase() === id.toLowerCase(); });
-  }
-
-  /* A patient can be imported when it has a name and its ID is not on the board yet. */
-  function importable(d) { return !!d.name && !(d.id && idExists(d.id)); }
-
+     The C server reads the text the same way as the terminal program:
+     each patient is a block from BEGIN to END. */
+  var previewSeq = 0;
   function renderImportPreview() {
-    var list = parseProlog($("i-text").value), out = $("i-parsed");
-    if (!list.length) {
-      out.innerHTML = '<p class="muted">Choose the intake file, or load an example record, to see the patients in it.</p>';
-    } else {
-      out.innerHTML = list.map(function (d) {
-        var dup = !!d.id && idExists(d.id);
-        var r = computePriority({ symptoms: d.symptoms, visible: [], likely: d.likely, highRisk: d.highRisk });
-        return '<div class="item' + (dup || !d.name ? " bad" : "") + '"><div class="top"><strong>' + esc(d.name || "No NAME in this record") + "</strong>" + chip(r.priority) + '</div><span class="sub">' +
-          esc((d.id || pad(S.nextArrival)) + " · " + (d.likely ? "Likely: " + human(d.likely) : (d.category || "no condition")) + " · " + (d.symptoms.length ? d.symptoms.map(human).join(", ") : "no symptoms")) +
-          " · " + esc(r.why) + "</span>" +
-          (!d.name ? '<span class="sub why-not">Add a NAME= line to import this patient.</span>' : "") +
-          (dup ? '<span class="sub why-not">ID ' + esc(d.id) + " is already on the board.</span>" : "") + "</div>";
-      }).join("");
+    if (!S) return;
+    var text = $("i-text").value, out = $("i-parsed"), seq = ++previewSeq;
+    var setButton = function (ready) {
+      $("i-submit").textContent = ready > 1 ? "Import " + ready + " patients" : "Import patient";
+      $("i-submit").disabled = !ready || S.records.length >= S.maxPatients;
+    };
+    if (!text.trim()) {
+      out.innerHTML = '<p class="muted">Load the intake file, or an example record, to see the patients in it.</p>';
+      setButton(0);
+      return;
     }
-    var ready = list.filter(importable).length;
-    $("i-submit").textContent = ready > 1 ? "Import " + ready + " patients" : "Import patient";
-    $("i-submit").disabled = !ready || S.records.length >= MAX_PATIENTS;
+    api("/api/preview", text).then(function (res) {
+      if (seq !== previewSeq) return;
+      var list = res.patients;
+      if (!list.length) {
+        out.innerHTML = '<p class="muted">No patients found in this text.</p>';
+      } else {
+        out.innerHTML = list.map(function (d) {
+          return '<div class="item' + (d.duplicate || !d.hasName ? " bad" : "") + '"><div class="top"><strong>' + esc(d.name || "No NAME in this record") + "</strong>" + chip(d.priority) + '</div><span class="sub">' +
+            esc((d.id || res.nextId) + " · " + (d.likely ? "Likely: " + human(d.likely) : (d.category || "no condition")) + " · " + (d.symptoms.length ? d.symptoms.map(human).join(", ") : "no symptoms")) +
+            " · " + esc(d.why) + "</span>" +
+            (!d.hasName ? '<span class="sub why-not">Add a NAME= line to import this patient.</span>' : "") +
+            (d.duplicate ? '<span class="sub why-not">ID ' + esc(d.id) + " is already on the board.</span>" : "") + "</div>";
+        }).join("");
+      }
+      setButton(list.filter(function (d) { return d.hasName && !d.duplicate; }).length);
+    }).catch(offline);
   }
 
   function submitImport() {
-    var list = parseProlog($("i-text").value);
-    if (!list.length) { toast("No patient data was found in the file.", true); return; }
-    var ready = list.filter(importable), added = [], last;
-    ready.forEach(function (d) {
-      last = addRecord({ id: d.id, name: d.name, category: d.category, likely: d.likely, highRisk: d.highRisk, symptoms: d.symptoms });
-      if (last.ok) added.push(last.p);
+    act("/api/import", $("i-text").value).then(function (res) {
+      if (!res.ok) return;
+      $("i-text").value = ""; $("i-file").value = "";
+      renderImportPreview();
     });
-    if (added.length) { $("i-text").value = ""; $("i-file").value = ""; }
-    renderAll();
-    if (!ready.length) { toast("Every patient in the file is already in the records or has no NAME.", true); return; }
-    if (!added.length) { report(last, ""); return; }
-    toast(added.length === 1
-      ? "Imported " + added[0].name + " (" + added[0].id + ") with Priority " + added[0].priority + "."
-      : "Imported " + added.length + " patients. " + (list.length - added.length) + " skipped.");
   }
 
   /* ---------- Add patient (add_patient_manual) ---------- */
+  function addForm() {
+    return "NAME=" + oneLine($("a-name").value.trim()) + "\nSYMPTOMS=" + A.symptoms.join(",") + "\nVISIBLE=" + A.visible.join(",");
+  }
+
+  var addSeq = 0;
   function renderAddForm() {
+    if (!S) return;
     $("a-chips").innerHTML = A.symptoms.map(function (s, i) {
       return '<span class="chip">' + esc(human(s)) + '<button type="button" aria-label="Remove ' + esc(human(s)) + '" data-rm="' + i + '">' + icon("x") + "</button></span>";
     }).join("");
-    $("a-sym").disabled = A.symptoms.length >= MAX_SYMPTOMS;
-    $("a-sym-add").disabled = A.symptoms.length >= MAX_SYMPTOMS;
+    $("a-sym").disabled = A.symptoms.length >= S.maxSymptoms;
+    $("a-sym-add").disabled = A.symptoms.length >= S.maxSymptoms;
 
-    $("a-vis").innerHTML = VISIBLE.map(function (v, i) {
+    $("a-vis").innerHTML = S.visibleConditions.map(function (v, i) {
       var on = A.visible.indexOf(i) !== -1;
-      var full = !on && A.visible.length >= MAX_VISIBLE;
-      return '<button class="vbtn" type="button" data-vis="' + i + '" aria-pressed="' + on + '"' + (full ? " disabled" : "") + "><span>" + esc(v[0]) + "</span>" + chip(v[1]) + "</button>";
+      var full = !on && A.visible.length >= S.maxVisible;
+      return '<button class="vbtn" type="button" data-vis="' + i + '" aria-pressed="' + on + '"' + (full ? " disabled" : "") + "><span>" + esc(v.name) + "</span>" + chip(v.priority) + "</button>";
     }).join("");
 
-    var r = computePriority({ symptoms: A.symptoms, visible: A.visible, likely: "" });
-    $("a-preview").innerHTML = chip(r.priority) + "<p>" + esc(r.why) + "</p>";
-    $("a-submit").disabled = !$("a-name").value.trim() || S.records.length >= MAX_PATIENTS;
+    var seq = ++addSeq;
+    api("/api/priority", addForm()).then(function (r) {
+      if (seq !== addSeq) return;
+      $("a-preview").innerHTML = chip(r.priority) + "<p>" + esc(r.why) + "</p>";
+    }).catch(offline);
+    $("a-submit").disabled = !$("a-name").value.trim() || S.records.length >= S.maxPatients;
   }
 
   /* Symptoms are lower-cased and spaces become underscores, like the C code. */
   function addSymptom() {
     var raw = $("a-sym").value.trim();
-    if (!raw || A.symptoms.length >= MAX_SYMPTOMS) return;
-    A.symptoms.push(raw.slice(0, MAX_SYMPTOM_LEN).toLowerCase().replace(/ /g, "_"));
+    if (!raw || A.symptoms.length >= S.maxSymptoms) return;
+    A.symptoms.push(raw.slice(0, 29).toLowerCase().replace(/[ ,]/g, "_"));
     $("a-sym").value = "";
     renderAddForm();
     $("a-sym").focus();
   }
 
   function submitAdd() {
-    var name = $("a-name").value.trim().slice(0, MAX_NAME);
-    if (!name) { toast("Enter the patient name.", true); return; }
-    var res = addRecord({ name: name, symptoms: A.symptoms.slice(), visible: A.visible.slice() });
-    if (res.ok) { A = { symptoms: [], visible: [] }; $("a-name").value = ""; $("a-sym").value = ""; }
-    renderAll();
-    report(res, res.ok ? "Added " + res.p.name + " (" + res.p.id + ") with Priority " + res.p.priority + "." : "");
+    act("/api/add", addForm()).then(function (res) {
+      if (!res.ok) return;
+      A = { symptoms: [], visible: [] }; $("a-name").value = ""; $("a-sym").value = "";
+      renderAddForm();
+    });
   }
 
   /* events */
-  $("admit-btn").addEventListener("click", function () {
-    var res = admitNext(); renderAll();
-    report(res, res.ok ? "Admitted " + res.p.name + " (" + res.p.id + ")." : "");
-  });
+  $("admit-btn").addEventListener("click", function () { act("/api/admit", ""); });
   $("beds").addEventListener("click", function (e) {
     var b = e.target.closest("[data-discharge]"); if (!b) return;
-    var res = discharge(Number(b.getAttribute("data-discharge"))); renderAll();
-    report(res, res.ok ? "Patient " + res.p.id + " discharged." : "");
+    act("/api/discharge", "ID=" + b.getAttribute("data-discharge"));
   });
-  $("clear-btn").addEventListener("click", function () {
-    S = { records: [], queue: [], nextArrival: 1, sample: false }; renderAll(); toast("The board is empty. Import the intake file or add a patient.");
-  });
+  $("clear-btn").addEventListener("click", function () { act("/api/clear", ""); });
   document.querySelector(".segmented").addEventListener("click", function (e) {
     var t = e.target.closest("[data-tab]"); if (!t) return;
     ["imp", "add", "sea"].forEach(function (k) {
@@ -282,8 +215,16 @@
 
   $("i-text").addEventListener("input", renderImportPreview);
   $("i-submit").addEventListener("click", submitImport);
+  /* The C server reads data/intake_records.txt itself, so no file picker is needed. */
+  $("i-load").addEventListener("click", function () {
+    api("/api/intake-file").then(function (res) {
+      if (!res.ok) { toast(res.message, true); return; }
+      $("i-text").value = res.text;
+      renderImportPreview();
+    }).catch(offline);
+  });
   /* Example Prolog export files: one block per patient, with the name stored in Prolog.
-     Each click on "Load an example file" brings in the next patient that is not on the board yet. */
+     Each click on "Load an example record" brings in the next patient that is not on the board yet. */
   var EXAMPLES = [
     "NAME=Carlos Mendoza\nID=PL-021\nCATEGORY=infectious\nLIKELY=meningitis\nSYMPTOMS=fever,stiff_neck,headache,photophobia",
     "NAME=Elena Ramos\nID=PL-022\nCATEGORY=respiratory\nLIKELY=asthma\nSYMPTOMS=wheezing,shortness_of_breath",
@@ -297,10 +238,14 @@
   ];
   var exCursor = 0;
   $("i-example").addEventListener("click", function () {
+    var onBoard = function (ex) {
+      var id = ex.match(/ID=(\S+)/)[1].toLowerCase();
+      return S.records.some(function (r) { return r.id.toLowerCase() === id; });
+    };
     var pick = -1;
     for (var k = 0; k < EXAMPLES.length; k++) {
       var j = (exCursor + k) % EXAMPLES.length;
-      if (!idExists(parseProlog(EXAMPLES[j])[0].id)) { pick = j; break; }
+      if (!onBoard(EXAMPLES[j])) { pick = j; break; }
     }
     if (pick === -1) { toast("All the example patients are already imported.", true); return; }
     exCursor = (pick + 1) % EXAMPLES.length;
@@ -325,26 +270,17 @@
   $("a-vis").addEventListener("click", function (e) {
     var b = e.target.closest("[data-vis]"); if (!b) return;
     var i = Number(b.getAttribute("data-vis")), at = A.visible.indexOf(i);
-    if (at !== -1) A.visible.splice(at, 1); else if (A.visible.length < MAX_VISIBLE) A.visible.push(i);
+    if (at !== -1) A.visible.splice(at, 1); else if (A.visible.length < S.maxVisible) A.visible.push(i);
     renderAddForm();
   });
   $("a-submit").addEventListener("click", submitAdd);
 
   $("s-q").addEventListener("input", renderSearch);
-  $("emerg-list").textContent = EMERGENCY.join(", ");
 
-  /* example patients, built with the same functions as real entries */
-  [
-    { name: "Maria Santos", symptoms: ["leg_pain", "swelling"], visible: [3] },
-    { name: "Jun Reyes", symptoms: ["fever", "cough"], visible: [] },
-    { name: "Lito Navarro", symptoms: [], visible: [0] },
-    { name: "Ana Dizon", symptoms: [], visible: [6] },
-    { id: "PL-014", name: "Rafael Cruz", category: "infectious", likely: "meningitis", symptoms: ["fever", "stiff_neck", "headache"], visible: [] },
-    { name: "Ines Bautista", symptoms: ["ankle_pain"], visible: [5] },
-    { name: "Paolo Garcia", symptoms: ["pain"], visible: [2] }
-  ].forEach(function (d) { addRecord(d); });
-  admitNext(); admitNext(); admitNext();
-  discharge(S.records.findIndex(function (r) { return r.status === "admitted"; }));
-
-  renderAll();
+  /* first load: get the board from the C server */
+  api("/api/state").then(function (state) {
+    S = state;
+    $("emerg-list").textContent = S.emergency.join(", ");
+    renderAll();
+  }).catch(offline);
 })();

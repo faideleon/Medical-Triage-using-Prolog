@@ -80,10 +80,13 @@ How the file looks is explained in [docs/INTAKE_FILE_FORMAT.md](docs/INTAKE_FILE
 
 ## Part B: C
 
+The rules live in one place, `c/hospital.c`. The terminal program and the
+web server both use it, so they always follow the same rules.
+
 ### B1. Terminal program (`c/triage.c`)
 
 **Running it**
-- [x] Build with `gcc c/triage.c -o triage`
+- [x] Build with `gcc c/triage.c c/hospital.c -o triage`
 - [x] Menu: add, import, show line, admit, discharge, search, beds, exit
 
 **How it keeps patients**
@@ -121,27 +124,38 @@ How the file looks is explained in [docs/INTAKE_FILE_FORMAT.md](docs/INTAKE_FILE
 **Beds and search**
 - [x] Add a patient by typing their details
 - [x] Admit the first patient in line, only if a bed is free (5 beds)
+- [x] Each admitted patient gets a bed number (the first free bed)
 - [x] Discharge a patient
 - [x] Search by name (small or capital letters both work)
 - [x] Show beds used, patients waiting and patients discharged
 
 **Safety**
-- [ ] Typing a letter in the menu does not break the program
-- [ ] Checks that memory was given before using it
+- [x] Typing a letter in the menu does not break the program
+- [x] Checks that memory was given before using it
 - [ ] Keeps the patients after the program closes (all lost now)
 
-### B2. Web board (`c/web/`)
-- [x] Open `c/web/index.html` in a browser (no server needed)
-- [x] Same priority rules as the C program, and shows why
-- [x] Same line order as the C program
-- [x] Import by choosing the file or pasting it, and see the patients first
+### B2. Web server (`c/server.c`)
+- [x] Build with `gcc c/server.c c/hospital.c -o triage-server -lws2_32` (leave out `-lws2_32` on Linux or Mac)
+- [x] Starts with `./triage-server` on port 8001; can use another port: `./triage-server 8081`
+- [x] Shows the board page at http://localhost:8001/
+- [x] Only this computer can open it
+- [x] Every rule runs in C: the page only shows what the server sends
+- [x] Reads `data/intake_records.txt` by itself (no need to pick the file)
+- [x] Answers one request at a time, so two clicks cannot change the board at once
+- [x] A browser keeping a connection open does not block other requests
+- [x] Will not send files outside `c/web/`
+- [ ] Keeps the board after the server stops (all lost now)
+
+### B3. Web board page (`c/web/`)
+- [x] Gets the board from the C server and sends every action to it
+- [x] Shows the priority and why
+- [x] Load the intake file, choose another file, or paste it, and see the patients first
 - [x] Marks patients with no name, or already on the board
-- [x] Form to add a patient by hand
+- [x] Form to add a patient by hand, with the priority shown as you fill it in
 - [x] Bed map: admit the next patient and discharge from a bed
 - [x] Search by name
 - [x] Shows beds used, waiting and discharged
-- [x] Same limits as the C program (100 patients, 5 beds, 10 symptoms)
-- [ ] Keeps the board after the page is refreshed
+- [x] Says how to start the C server if it is not running
 - [ ] Same missing items as B1 (saved time, hospital needs count)
 
 ---
@@ -151,4 +165,4 @@ How the file looks is explained in [docs/INTAKE_FILE_FORMAT.md](docs/INTAKE_FILE
 - [x] The README says how to run both parts
 - [x] The `data/` folder is not saved in git
 - [ ] Tests for the Prolog rules and the C file reader
-- [ ] One sample file to test both the C program and the web board
+- [ ] One sample file to test the C file reader
